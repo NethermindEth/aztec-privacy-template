@@ -6,14 +6,9 @@ SOLHINT := bunx solhint
 BIOME_CONFIG := --config-path .biome.json
 SOLIDITY_FILES := $(shell find packages tests -type f -name '*.sol' 2>/dev/null)
 
-WORKDIRS := packages/core packages/protocols/aave packages/protocols/uniswap packages/protocols/lido tests tests/e2e tests/e2e/specs docs docs/appendix scripts
-CONFIG_TEMPLATE := template.toml
-CONFIG_TOOL := scripts/config/src/cli.ts
+WORKDIRS := packages/core packages/protocols/aave packages/protocols/uniswap packages/protocols/lido tests tests/e2e
 AZTEC_CONTRACT_DIRS := packages/protocols/aave/aztec packages/protocols/uniswap/aztec packages/protocols/lido/aztec
 FMT_TARGETS := $(shell find . -type f \( -name "*.ts" -o -name "*.js" -o -name "*.cjs" -o -name "*.mjs" \) -not -path "./node_modules/*" -not -path "./.git/*" -not -name ".biome.json")
-CORE_TS_TESTS := $(shell find packages/core/ts -type f -name "*.test.ts" 2>/dev/null)
-CONFIG_TESTS := $(shell find scripts/config -type f -name "*.test.ts" 2>/dev/null)
-CORE_NOIR_TESTS := $(shell find packages/core/noir -type f -name "*.test.nr" 2>/dev/null)
 CORE_SOL_TESTS := $(shell find packages/core/solidity -type f -name "*.t.sol" 2>/dev/null)
 PROTOCOLS := $(filter-out .keep, $(notdir $(wildcard packages/protocols/*)))
 BUILD_PROTOCOLS := $(addprefix build-protocol-,$(PROTOCOLS))
@@ -31,7 +26,7 @@ help:
 	@printf "  make test-core       Run core unit tests\n"
 	@printf "  make lint-core       Run core linters\n"
 	@printf "  make test-e2e        Run real E2E (Aztec + L1) for all protocols\n"
-	@printf "  make build           Build generated artifacts\n"
+	@printf "  make build           Build protocol artifacts\n"
 	@printf "  make clean           Clean build artifacts\n"
 	@printf "  make check           Run fmt-check + lint + test-unit\n"
 	@printf "  make protocol-aave   Build Aave protocol artifacts\n"
@@ -112,23 +107,19 @@ $(BUILD_PROTOCOLS): build-protocol-%:
 
 protocol-aave:
 	@echo "Building Aave protocol artifacts..."
-	@$(BUN) run $(CONFIG_TOOL) --template=$(CONFIG_TEMPLATE) --protocol=aave --protocol-config=packages/protocols/aave/config.toml --out-dir=packages/protocols/aave/generated
 	@(cd packages/protocols/aave/aztec && aztec compile)
 
 protocol-uniswap:
 	@echo "Building Uniswap protocol artifacts..."
-	@$(BUN) run $(CONFIG_TOOL) --template=$(CONFIG_TEMPLATE) --protocol=uniswap --protocol-config=packages/protocols/uniswap/config.toml --out-dir=packages/protocols/uniswap/generated
 	@(cd packages/protocols/uniswap/aztec && aztec compile)
 
 protocol-lido:
 	@echo "Building Lido protocol artifacts..."
-	@$(BUN) run $(CONFIG_TOOL) --template=$(CONFIG_TEMPLATE) --protocol=lido --protocol-config=packages/protocols/lido/config.toml --out-dir=packages/protocols/lido/generated
 	@(cd packages/protocols/lido/aztec && aztec compile)
 
 clean:
 	@echo "Cleaning build artifacts..."
 	@rm -rf target
-	@rm -rf packages/protocols/*/generated
 	@rm -rf coverage .turbo .nyc_output
 
 check:
@@ -137,35 +128,6 @@ check:
 	@$(MAKE) test-core
 
 test-core:
-	@echo "Running core TS tests..."
-	@if [ -n "$(CORE_TS_TESTS)" ]; then \
-		if command -v $(BUN) >/dev/null 2>&1; then \
-			$(BUN) test $(CORE_TS_TESTS); \
-		else \
-			echo "bun not installed; skipping core TS tests."; \
-		fi; \
-	else \
-		echo "No core TS tests found."; \
-	fi
-	@if [ -n "$(CONFIG_TESTS)" ]; then \
-		if command -v $(BUN) >/dev/null 2>&1; then \
-			$(BUN) test $(CONFIG_TESTS); \
-		else \
-			echo "bun not installed; skipping config tests."; \
-		fi; \
-	else \
-		echo "No config tests found."; \
-	fi
-	@echo "Running core Noir tests (placeholder)..."
-	@if [ -n "$(CORE_NOIR_TESTS)" ]; then \
-		if command -v nargo >/dev/null 2>&1; then \
-			$(MAKE) -C packages/core/noir test; \
-		else \
-			echo "nargo not installed; run manually when toolchain is available."; \
-		fi; \
-	else \
-		echo "No core Noir tests found."; \
-	fi
 	@echo "Running core Solidity tests (placeholder)..."
 	@if [ -n "$(CORE_SOL_TESTS)" ]; then \
 		if command -v forge >/dev/null 2>&1; then \

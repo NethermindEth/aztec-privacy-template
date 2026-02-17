@@ -12,6 +12,8 @@ yarn.lock
 
 # Build artifacts
 target/
+out/
+cache/
 
 # Tooling artifacts
 .env
