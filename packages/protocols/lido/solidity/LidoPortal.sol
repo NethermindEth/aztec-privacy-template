@@ -2,8 +2,8 @@
 pragma solidity ^0.8.33;
 
 /* solhint-disable import-path-check */
-import {BasePortal} from "../../core/solidity/BasePortal.sol";
-import {EscapeHatch} from "../../core/solidity/EscapeHatch.sol";
+import {BasePortal} from "../../../core/solidity/BasePortal.sol";
+import {EscapeHatch} from "../../../core/solidity/EscapeHatch.sol";
 
 /// @title ILidoLike
 /// @author aztec-privacy-template

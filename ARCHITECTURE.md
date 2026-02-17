@@ -28,6 +28,7 @@ Each protocol keeps consistent structure:
 
 - `packages/protocols/<protocol>/config.toml`
 - `packages/protocols/<protocol>/generated/*` (derived from config)
+- `packages/protocols/<protocol>/aztec/src/main.nr` (deployable L2 contract)
 - `packages/protocols/<protocol>/noir/src/core/*`
 - `packages/protocols/<protocol>/noir/src/modules/*` (optional feature modules)
 - `packages/protocols/<protocol>/ts/*.ts`
@@ -52,8 +53,8 @@ Each protocol keeps consistent structure:
 
 ### Execution modes
 
-- Relayer mode: lifecycle calls are submitted via relayer adapter (`tests/e2e/relayer-runner.ts`).
-- Self-execution mode: same lifecycle is executed with deterministic local behavior for test parity.
+- Real E2E mode: `tests/e2e/real/*.real.spec.ts` runs Aave, Uniswap, and Lido against Aztec local network and real L1 contract deployments.
+- Deterministic harness mode: lifecycle adapters are under `tests/e2e/specs/*` with relayer/self-execution parity.
 
 ## Optional module flow
 

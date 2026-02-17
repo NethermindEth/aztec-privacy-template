@@ -9,6 +9,7 @@ SOLIDITY_FILES := $(shell find packages tests -type f -name '*.sol' 2>/dev/null)
 WORKDIRS := packages/core packages/protocols/aave packages/protocols/uniswap packages/protocols/lido tests tests/e2e tests/e2e/specs docs docs/appendix scripts
 CONFIG_TEMPLATE := template.toml
 CONFIG_TOOL := scripts/config/src/cli.ts
+AZTEC_CONTRACT_DIRS := packages/protocols/aave/aztec packages/protocols/uniswap/aztec packages/protocols/lido/aztec
 FMT_TARGETS := $(shell find . -type f \( -name "*.ts" -o -name "*.js" -o -name "*.cjs" -o -name "*.mjs" \) -not -path "./node_modules/*" -not -path "./.git/*" -not -name ".biome.json")
 CORE_TS_TESTS := $(shell find packages/core/ts -type f -name "*.test.ts" 2>/dev/null)
 CONFIG_TESTS := $(shell find scripts/config -type f -name "*.test.ts" 2>/dev/null)
@@ -17,7 +18,7 @@ CORE_SOL_TESTS := $(shell find packages/core/solidity -type f -name "*.t.sol" 2>
 PROTOCOLS := $(filter-out .keep, $(notdir $(wildcard packages/protocols/*)))
 BUILD_PROTOCOLS := $(addprefix build-protocol-,$(PROTOCOLS))
 
-.PHONY: help install fmt fmt-check lint test test-unit test-e2e build clean check test-core lint-core protocol-aave protocol-uniswap protocol-lido build-protocol-% dev-sandbox-up dev-sandbox-down
+.PHONY: help install fmt fmt-check lint test test-unit test-e2e build build-aztec clean check test-core lint-core protocol-aave protocol-uniswap protocol-lido build-protocol-% dev-sandbox-up dev-sandbox-down
 
 help:
 	@printf "Available targets:\n"
@@ -25,11 +26,11 @@ help:
 	@printf "  make fmt             Format supported files\n"
 	@printf "  make fmt-check       Check formatting without writing\n"
 	@printf "  make lint            Run biome + solhint\n"
-	@printf "  make test            Run test suite (unit + e2e placeholders)\n"
+	@printf "  make test            Run test suite (unit + real e2e)\n"
 	@printf "  make test-unit       Run fast unit tests\n"
 	@printf "  make test-core       Run core unit tests\n"
 	@printf "  make lint-core       Run core linters\n"
-	@printf "  make test-e2e        Run E2E tests\n"
+	@printf "  make test-e2e        Run real E2E (Aztec + L1) for all protocols\n"
 	@printf "  make build           Build generated artifacts\n"
 	@printf "  make clean           Clean build artifacts\n"
 	@printf "  make check           Run fmt-check + lint + test-unit\n"
@@ -77,18 +78,34 @@ test-unit:
 	fi
 
 test-e2e:
-	@echo "Running E2E test suite..."
-	@if [ -d "tests/e2e" ]; then \
-		$(BUN) test tests/e2e; \
-	else \
-		echo "No E2E harness yet. Placeholder target."; \
+	@echo "Running real E2E test suite..."
+	@if [ ! -d "node_modules/@aztec" ]; then \
+		echo "Aztec SDK dependencies are missing; installing workspace dependencies first..."; \
+		$(BUN) install; \
 	fi
+	@if [ ! -d "node_modules/tsx" ]; then \
+		echo "tsx is missing; installing workspace dependencies first..."; \
+		$(BUN) install; \
+	fi
+	@node --import tsx --test --test-concurrency=1 --test-reporter=spec tests/e2e/real/*.real.spec.ts
 
 build:
 	@echo "Building artifacts for all protocols..."
 	@$(MAKE) $(BUILD_PROTOCOLS)
+	@$(MAKE) build-aztec
 	@mkdir -p target
 	@echo "Build complete."
+
+build-aztec:
+	@echo "Compiling Aztec protocol contracts..."
+	@if ! command -v aztec >/dev/null 2>&1; then \
+		echo "aztec CLI is required to compile protocol Aztec contracts."; \
+		exit 1; \
+	fi
+	@for dir in $(AZTEC_CONTRACT_DIRS); do \
+		echo "Compiling $$dir"; \
+		(cd $$dir && aztec compile); \
+	done
 
 $(BUILD_PROTOCOLS): build-protocol-%:
 	@$(MAKE) protocol-$*
@@ -96,14 +113,17 @@ $(BUILD_PROTOCOLS): build-protocol-%:
 protocol-aave:
 	@echo "Building Aave protocol artifacts..."
 	@$(BUN) run $(CONFIG_TOOL) --template=$(CONFIG_TEMPLATE) --protocol=aave --protocol-config=packages/protocols/aave/config.toml --out-dir=packages/protocols/aave/generated
+	@(cd packages/protocols/aave/aztec && aztec compile)
 
 protocol-uniswap:
 	@echo "Building Uniswap protocol artifacts..."
 	@$(BUN) run $(CONFIG_TOOL) --template=$(CONFIG_TEMPLATE) --protocol=uniswap --protocol-config=packages/protocols/uniswap/config.toml --out-dir=packages/protocols/uniswap/generated
+	@(cd packages/protocols/uniswap/aztec && aztec compile)
 
 protocol-lido:
 	@echo "Building Lido protocol artifacts..."
 	@$(BUN) run $(CONFIG_TOOL) --template=$(CONFIG_TEMPLATE) --protocol=lido --protocol-config=packages/protocols/lido/config.toml --out-dir=packages/protocols/lido/generated
+	@(cd packages/protocols/lido/aztec && aztec compile)
 
 clean:
 	@echo "Cleaning build artifacts..."

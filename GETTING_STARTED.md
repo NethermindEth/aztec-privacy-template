@@ -14,6 +14,12 @@ Optional if you are compiling Solidity/Noir locally:
 - Solidity toolchain (`forge`) for core protocol tests
 - Noir toolchain (`nargo`) for Noir tests and compilation
 
+Required for real E2E:
+
+- Aztec CLI (`aztec`) with Docker access
+- `forge` + `cast` for L1 deployment and calls
+- Docker daemon running locally
+
 ## Quickstart
 
 1. Install dependencies.
@@ -46,6 +52,14 @@ Optional if you are compiling Solidity/Noir locally:
 make test-core
 ```
 
+`make test-e2e` runs real vertical slices for Aave, Uniswap, and Lido:
+
+1. Starts Aztec local network (`aztec start --local-network`) if not already running.
+2. Compiles protocol-owned Aztec contracts (`packages/protocols/<protocol>/aztec`).
+3. Deploys the protocol portal + mock protocol contracts on local L1 RPC.
+4. Executes private token activity on Aztec.
+5. Executes protocol request/execute flow on L1 and validates consumed message + protocol state.
+
 ## Core Flow (Default)
 
 Each protocol ships with a working core flow first:
@@ -59,10 +73,11 @@ Core behavior is defined by:
 - `template.toml` shared config
 - Per-protocol `packages/protocols/<protocol>/config.toml` overrides
 - Generated artifacts under `packages/protocols/<protocol>/generated`
-- Protocol-specific Noir core modules under `packages/protocols/<protocol>/noir/src/core`
+- Protocol-owned Aztec contracts under `packages/protocols/<protocol>/aztec/src/main.nr`
+- Optional Noir helper modules under `packages/protocols/<protocol>/noir/src/core`
 - Protocol clients under `packages/protocols/<protocol>/ts`
 - Protocol portals under `packages/protocols/<protocol>/solidity`
-- Protocol E2E spec adapters under `tests/e2e/specs`
+- Real E2E specs under `tests/e2e/real/*.real.spec.ts`
 
 Appendix references for each protocol flow:
 

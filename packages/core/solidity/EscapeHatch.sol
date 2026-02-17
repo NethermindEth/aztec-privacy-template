@@ -35,8 +35,8 @@ abstract contract EscapeHatch {
         bytes32 indexed messageHash,
         address indexed depositor,
         address indexed token,
-        uint256 indexed amount,
-        uint64 indexed timeoutBlocks
+        uint256 amount,
+        uint64 timeoutBlocks
     );
     /// @notice Emitted when an escape request is canceled.
     /// @param messageHash Message hash associated with the request.

@@ -11,8 +11,13 @@
     "test": "bun test"
   },
   "devDependencies": {
+    "@aztec/accounts": "3.0.0-devnet.6-patch.1",
+    "@aztec/aztec.js": "3.0.0-devnet.6-patch.1",
+    "@aztec/noir-contracts.js": "3.0.0-devnet.6-patch.1",
+    "@aztec/test-wallet": "3.0.0-devnet.6-patch.1",
     "@biomejs/biome": "^1.9.4",
     "toml": "^3.0.0",
-    "solhint": "^6.0.3"
+    "solhint": "^6.0.3",
+    "tsx": "^4.20.3"
   }
 }

@@ -8,6 +8,7 @@ Create the minimal set:
 
 - `packages/protocols/<protocol>/config.toml`
 - `packages/protocols/<protocol>/generated` (created by build)
+- `packages/protocols/<protocol>/aztec/src/main.nr`
 - `packages/protocols/<protocol>/noir/src/core`
 - `packages/protocols/<protocol>/noir/src/modules` (optional features)
 - `packages/protocols/<protocol>/solidity`
@@ -46,17 +47,21 @@ enable_yield = false
 
 Only include values you need changed; all unspecified values inherit from `template.toml`.
 
-## 3) Implement core Noir flow
+## 3) Implement Aztec contract
 
-- Add one `.nr` file per required action under `noir/src/core`.
-- Keep helpers deterministic and pure:
-  - typed input structs
-  - action id functions
-  - encoding helpers
-  - lightweight validation helpers
-- Expose via `noir/src/lib.nr` with `mod core { ... }`.
+- Add `aztec/Nargo.toml` with the Aztec dependency and contract package metadata.
+- Implement the protocol contract in `aztec/src/main.nr`:
+  - `constructor` with portal address and admin wiring
+  - private request entrypoints (`request_deposit`, `request_swap`, etc.)
+  - private finalize entrypoints consuming L1->L2 messages
+  - public pending-status state updates guarded to self-calls
 
-## 4) Optional modules
+## 4) Optional Noir helper modules
+
+- Keep protocol-specific helper primitives under `noir/src/core` and `noir/src/modules`.
+- Use these modules for deterministic encoding/flag helpers, not as deployable contracts.
+
+## 5) Optional modules
 
 - Add optional modules only under `noir/src/modules`:
   - Aave-style optional: `borrow`, `repay`
@@ -65,25 +70,25 @@ Only include values you need changed; all unspecified values inherit from `templ
 - Read feature constants from `crate::privacy_flags`.
 - Keep optional modules API consistent with core modules.
 
-## 5) Implement protocol TS client
+## 6) Implement protocol TS client
 
 - Add request builders in `packages/protocols/<protocol>/ts/<protocol>.ts`.
 - Reuse generated constants from `generated/protocol_constants.ts`.
 - Add tests in `<protocol>.test.ts`.
 
-## 6) Add Solidity portal
+## 7) Add Solidity portal
 
 - Add `Portal.sol` implementing request/execute flow consistent with protocol client.
 - Extend with escape hatch behavior where execution can fail.
 - Add a protocol-specific test under `solidity/test`.
 
-## 7) Add E2E adapter/spec
+## 8) Add real E2E spec
 
-- Add spec adapter in `tests/e2e/specs/<protocol>.ts`.
-- Add harness-driven spec in `tests/e2e/specs/<protocol>.spec.ts`.
-- Verify both relayer and self-execution modes when relevant.
+- Add `tests/e2e/real/<protocol>.real.spec.ts`.
+- Compile the protocol Aztec contract (`aztec compile`) inside the spec or pre-build step.
+- Run against real local services (`aztec` local network + `forge/cast` on L1).
 
-## 8) Regenerate artifacts and wire to docs
+## 9) Regenerate artifacts and wire to docs
 
 1. Generate protocol artifacts:
 
@@ -91,13 +96,13 @@ Only include values you need changed; all unspecified values inherit from `templ
    bun run scripts/config/src/cli.ts --template=template.toml --protocol=<protocol> --protocol-config=packages/protocols/<protocol>/config.toml --out-dir=packages/protocols/<protocol>/generated
    ```
 
-2. Add a `Makefile` target for `protocol-<protocol>` if you want this command to be available via `make`.
+2. Add/verify a `Makefile` target for `protocol-<protocol>` that runs config generation and `aztec compile`.
 
 3. Update:
    - `docs/appendix/<protocol>-core-flow.md` for protocol details
    - release/fork impact in related docs if needed
 
-## 9) Validate before handoff
+## 10) Validate before handoff
 
 - `make fmt`
 - `make lint`
@@ -110,6 +115,6 @@ Optional local checks:
 - `make test` for full repo test command path
 - `bun test packages/protocols/<protocol>/ts/<protocol>.test.ts`
 
-## 10) Keep behavior additive
+## 11) Keep behavior additive
 
 Core flows must remain stable and working when all optional module flags are false.
