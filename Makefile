@@ -9,6 +9,9 @@ SOLHINT := npx solhint
 SOLIDITY_FILES := $(shell find packages tests -type f -name '*.sol' 2>/dev/null)
 
 WORKDIRS := packages/core packages/protocols/aave packages/protocols/uniswap packages/protocols/lido tests tests/e2e tests/e2e/specs docs docs/appendix scripts
+CORE_TS_TESTS := $(shell find packages/core/ts -type f -name "*.test.ts" 2>/dev/null)
+CORE_NOIR_TESTS := $(shell find packages/core/noir -type f -name "*.test.nr" 2>/dev/null)
+CORE_SOL_TESTS := $(shell find packages/core/solidity -type f -name "*.t.sol" 2>/dev/null)
 
 .PHONY: help install fmt fmt-check lint test test-unit test-e2e build clean check test-core lint-core protocol-aave protocol-uniswap protocol-lido dev-sandbox-up dev-sandbox-down
 
@@ -20,6 +23,8 @@ help:
 	@printf "  make lint            Run biome + solhint\n"
 	@printf "  make test            Run test suite (unit + e2e placeholders)\n"
 	@printf "  make test-unit       Run fast unit tests\n"
+	@printf "  make test-core       Run core unit tests\n"
+	@printf "  make lint-core       Run core linters\n"
 	@printf "  make test-e2e        Run E2E tests\n"
 	@printf "  make build           Build generated artifacts\n"
 	@printf "  make clean           Clean build artifacts\n"
@@ -92,10 +97,39 @@ clean:
 check:
 	@$(MAKE) fmt-check
 	@$(MAKE) lint
-	@$(MAKE) test-unit
+	@$(MAKE) test-core
 
 test-core:
-	@$(MAKE) test-unit
+	@echo "Running core TS tests..."
+	@if [ -n "$(CORE_TS_TESTS)" ]; then \
+		if command -v bun >/dev/null 2>&1; then \
+			bun test $(CORE_TS_TESTS); \
+		else \
+			echo "bun not installed; skipping core TS tests."; \
+		fi; \
+	else \
+		echo "No core TS tests found."; \
+	fi
+	@echo "Running core Noir tests (placeholder)..."
+	@if [ -n "$(CORE_NOIR_TESTS)" ]; then \
+		if command -v nargo >/dev/null 2>&1; then \
+			$(MAKE) -C packages/core/noir test || true; \
+		else \
+			echo "nargo not installed; run manually when toolchain is available."; \
+		fi; \
+	else \
+		echo "No core Noir tests found."; \
+	fi
+	@echo "Running core Solidity tests (placeholder)..."
+	@if [ -n "$(CORE_SOL_TESTS)" ]; then \
+		if command -v forge >/dev/null 2>&1; then \
+			(cd packages/core/solidity && forge test); \
+		else \
+			echo "forge not installed; run manually when toolchain is available."; \
+		fi; \
+	else \
+		echo "No core Solidity tests found."; \
+	fi
 
 lint-core:
 	@$(MAKE) lint

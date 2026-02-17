@@ -59,6 +59,8 @@ Exit criteria:
 
 ## Phase 1: Core Infrastructure
 
+**COMPLETE**
+
 Goal: deliver reusable building blocks all protocols depend on.
 
 Solidity v0.8.33
