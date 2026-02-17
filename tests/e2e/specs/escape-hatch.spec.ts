@@ -39,6 +39,10 @@ test('escape hatch claims after timeout and rejects duplicate claim', async () =
   });
 
   assert.equal(canClaimEscape(requestHash), false);
+  assert.throws(() => {
+    claimEscape(requestHash);
+  }, /Escape not ready/);
+
   mineBlocks(1);
   assert.equal(canClaimEscape(requestHash), true);
 
@@ -48,4 +52,22 @@ test('escape hatch claims after timeout and rejects duplicate claim', async () =
   assert.throws(() => {
     claimEscape(requestHash);
   }, /Escape already claimed/);
+});
+
+test('escape hatch uses default timeout when timeoutBlocks is zero', async () => {
+  await startSandbox();
+  const requestHash = registerEscapeRequest({
+    protocol: 'uniswap',
+    depositor: '0xb000000000000000000000000000000000000003',
+    token: '0xb000000000000000000000000000000000000003',
+    amount: '7',
+    timeoutBlocks: 0,
+    requestSeed: 'escape-default-timeout',
+  });
+
+  mineBlocks(19);
+  assert.equal(canClaimEscape(requestHash), false);
+
+  mineBlocks(1);
+  assert.equal(canClaimEscape(requestHash), true);
 });

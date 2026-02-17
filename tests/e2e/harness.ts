@@ -55,6 +55,7 @@ const sandbox: SandboxRuntime = {
   started: false,
   startupCount: 0,
 };
+const DEFAULT_ESCAPE_TIMEOUT_BLOCKS = 20;
 
 const escapeRequests = new Map<string, EscapeRequest>();
 const relayerRunner = new StatelessRelayerRunner();
@@ -111,12 +112,17 @@ export function registerEscapeRequest(input: {
   requestSeed: string;
 }): string {
   if (!sandbox.started) {
-    sandbox.started = true;
-    sandbox.startupCount += 1;
-    sandbox.blockHeight = 1;
+    throw new Error('Sandbox not started');
   }
 
-  const timeoutBlocks = input.timeoutBlocks ?? 0;
+  const timeoutBlocks =
+    input.timeoutBlocks === undefined || input.timeoutBlocks === 0
+      ? DEFAULT_ESCAPE_TIMEOUT_BLOCKS
+      : input.timeoutBlocks;
+  if (!Number.isSafeInteger(timeoutBlocks) || timeoutBlocks <= 0) {
+    throw new Error('Invalid timeoutBlocks');
+  }
+
   const requestHash = `0x${hashSeed(`escape-${input.requestSeed}-${input.depositor}`).slice(0, 40)}`;
   if (escapeRequests.has(requestHash)) {
     throw new Error('Request already exists');
