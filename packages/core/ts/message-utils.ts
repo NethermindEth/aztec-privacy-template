@@ -51,8 +51,13 @@ function hashString(input: string): string {
 }
 
 export function verifyPrivateMessage(message: EncodedMessage, expectedRecipient: string, expectedAction: string): boolean {
-  const parsed = JSON.parse(message.payload) as MessagePayload;
-  return message.contentHash === hashString(message.payload)
-    && parsed.recipient === expectedRecipient
-    && parsed.action === expectedAction;
+  try {
+    const parsed = JSON.parse(message.payload) as Partial<MessagePayload>;
+
+    return message.contentHash === hashString(message.payload)
+      && parsed.recipient === expectedRecipient
+      && parsed.action === expectedAction;
+  } catch {
+    return false;
+  }
 }

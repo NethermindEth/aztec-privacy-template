@@ -20,3 +20,14 @@ test('wallet manager creates and reuses wallets', () => {
   assert.equal(same.address, wallet.address);
   assert.equal(walletManager.list().length, 1);
 });
+
+test('loadOrCreate preserves requested address when missing', () => {
+  const walletManager = new WalletManager();
+  const network = Environment.default().network;
+  const requestedAddress = '0x000000000000000000000000000000000000beef';
+
+  const wallet = walletManager.loadOrCreate(requestedAddress, 'alice', network);
+
+  assert.equal(wallet.address, requestedAddress);
+  assert.equal(wallet.type, 'remote');
+});

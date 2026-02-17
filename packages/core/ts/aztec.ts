@@ -41,7 +41,7 @@ export class AztecClient {
   }
 
   public createWallet(config: { owner: string; network?: WalletProfile; privateKey?: string }) {
-    const network = this.env.network;
+    const network = config.network ?? this.env.network;
     const wallet: WalletConfig = {
       owner: config.owner,
       network,

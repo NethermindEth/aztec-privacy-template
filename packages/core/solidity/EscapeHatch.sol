@@ -23,6 +23,8 @@ abstract contract EscapeHatch {
 
     error EscapeNotReady();
     error EscapeAlreadyClaimed();
+    error EscapeAlreadyRegistered();
+    error InvalidDepositor();
     error EscapeNotFound();
     error EscapeNoFunds();
 
@@ -35,20 +37,30 @@ abstract contract EscapeHatch {
         uint256 amount,
         uint64 timeoutBlocks
     ) internal {
-        if (amount == 0) {
-            return;
+        if (depositor == address(0)) {
+            revert InvalidDepositor();
         }
+
+        if (amount == 0) {
+            revert EscapeNoFunds();
+        }
+
+        if (escapeRequests[messageHash].depositor != address(0)) {
+            revert EscapeAlreadyRegistered();
+        }
+
+        uint64 effectiveTimeout = timeoutBlocks == 0 ? DEFAULT_ESCAPE_TIMEOUT : timeoutBlocks;
 
         escapeRequests[messageHash] = EscapeRequest({
             depositor: depositor,
             token: token,
             amount: amount,
             createdAtBlock: uint64(block.number),
-            timeoutBlocks: timeoutBlocks == 0 ? DEFAULT_ESCAPE_TIMEOUT : timeoutBlocks,
+            timeoutBlocks: effectiveTimeout,
             claimed: false
         });
 
-        emit EscapeRegistered(messageHash, depositor, token, amount, timeoutBlocks == 0 ? DEFAULT_ESCAPE_TIMEOUT : timeoutBlocks);
+        emit EscapeRegistered(messageHash, depositor, token, amount, effectiveTimeout);
     }
 
     function claimEscape(bytes32 messageHash) external {
@@ -74,8 +86,7 @@ abstract contract EscapeHatch {
 
         bool transferSuccessful;
         if (request.token == address(0)) {
-            payable(request.depositor).transfer(request.amount);
-            transferSuccessful = true;
+            (transferSuccessful,) = payable(request.depositor).call{value: request.amount}("");
         } else {
             transferSuccessful = IERC20Like(request.token).transfer(request.depositor, request.amount);
         }

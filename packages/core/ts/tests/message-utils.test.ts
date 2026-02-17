@@ -9,3 +9,10 @@ test('message encoding is stable and verifiable', () => {
   assert.equal(encoded.payload.includes('"chainId":1'), true);
   assert.equal(verifyPrivateMessage(encoded, '0xalice', 'deposit'), true);
 });
+
+test('verifyPrivateMessage returns false for invalid payload json', () => {
+  assert.equal(
+    verifyPrivateMessage({ contentHash: 'abc', payload: 'not-json' }, '0xalice', 'deposit'),
+    false,
+  );
+});

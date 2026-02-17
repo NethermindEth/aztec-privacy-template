@@ -7,11 +7,14 @@ test('environment creates and normalizes values', () => {
     network: 'testnet',
     chainId: 1,
     rpcUrl: 'https://example-rpc.test',
+    timeoutMs: 15_000,
   });
 
   assert.equal(env.network.chainId, 1);
   assert.equal(env.network.networkKind, 'testnet');
   assert.equal(env.network.rpcUrl, 'https://example-rpc.test');
+  assert.equal(env.network.timeoutMs, 15_000);
+  assert.equal(env.asClientOptions().timeoutMs, 15_000);
 });
 
 test('environment rejects invalid rpc url', () => {
@@ -20,6 +23,17 @@ test('environment rejects invalid rpc url', () => {
       network: 'mainnet',
       chainId: 1,
       rpcUrl: 'not-a-url',
+    });
+  });
+});
+
+test('environment rejects invalid timeout', () => {
+  assert.throws(() => {
+    Environment.create({
+      network: 'mainnet',
+      chainId: 1,
+      rpcUrl: 'https://rpc.example',
+      timeoutMs: 0,
     });
   });
 });

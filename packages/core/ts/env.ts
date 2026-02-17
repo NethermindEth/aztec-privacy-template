@@ -13,6 +13,7 @@ export type WalletProfile = {
   chainId: number;
   rpcUrl: string;
   pxeUrl?: string;
+  timeoutMs: number;
 };
 
 const DEFAULT_TIMEOUT_MS = 30_000;
@@ -39,9 +40,14 @@ export class Environment {
 
   public static create(config: NetworkConfig): Environment {
     const kind = normalizeKind(config.network);
+    const timeoutMs = config.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 
     if (!Number.isSafeInteger(config.chainId) || config.chainId <= 0) {
       throw new Error('Invalid chainId');
+    }
+
+    if (!Number.isSafeInteger(timeoutMs) || timeoutMs <= 0) {
+      throw new Error('Invalid timeoutMs');
     }
 
     if (!isValidRpcUrl(config.rpcUrl)) {
@@ -53,6 +59,7 @@ export class Environment {
       chainId: config.chainId,
       rpcUrl: config.rpcUrl,
       pxeUrl: config.pxeUrl,
+      timeoutMs,
     });
   }
 
@@ -61,7 +68,6 @@ export class Environment {
       network: 'sandbox',
       rpcUrl: 'http://localhost:8545',
       chainId: 31337,
-      timeoutMs: DEFAULT_TIMEOUT_MS,
     });
   }
 
@@ -70,7 +76,7 @@ export class Environment {
       chainId: this.network.chainId,
       rpcUrl: this.network.rpcUrl,
       pxeUrl: this.network.pxeUrl,
-      timeoutMs: DEFAULT_TIMEOUT_MS,
+      timeoutMs: this.network.timeoutMs,
     };
   }
 }

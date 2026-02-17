@@ -25,13 +25,21 @@ contract EscapeHatchTest is Test {
     }
 
     function testRegisterThenCancel() public {
-        bytes32 key = keccak256('escape');
+        bytes32 key = keccak256(abi.encodePacked("escape"));
         target.register(key, address(0x1234), address(0), 1 ether, 10);
-        EscapeRequest memory request = target.getEscapeRequest(key);
+        EscapeHatch.EscapeRequest memory request = target.getEscapeRequest(key);
         assertEq(request.depositor, address(0x1234));
 
         target.cancel(key);
         request = target.getEscapeRequest(key);
         assertEq(request.depositor, address(0));
+    }
+
+    function testCannotOverwriteEscapeRequest() public {
+        bytes32 key = keccak256(abi.encodePacked("escape-dup"));
+        target.register(key, address(0x1234), address(0), 1 ether, 10);
+
+        vm.expectRevert(EscapeHatch.EscapeAlreadyRegistered.selector);
+        target.register(key, address(0x1234), address(0), 2 ether, 10);
     }
 }

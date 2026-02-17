@@ -31,11 +31,20 @@ contract BasePortalTest is Test {
     }
 
     function testSendAndConsume() public {
-        bytes32 content = keccak256('content');
+        bytes32 content = keccak256(abi.encodePacked("content"));
         bytes32 messageHash = portal.send(content, address(0x1234));
         assertEq(portal.hasMessageBeenIssued(messageHash), true);
 
         portal.consume(content, address(0x1234), 1);
         assertEq(portal.hasMessageBeenConsumed(messageHash), true);
+    }
+
+    function testOnlyRelayerCanConsume() public {
+        bytes32 content = keccak256(abi.encodePacked("content-2"));
+        portal.send(content, address(0x4321));
+
+        vm.prank(address(0xBEEF));
+        vm.expectRevert(BasePortal.UnauthorizedCaller.selector);
+        portal.consume(content, address(0x4321), 1);
     }
 }

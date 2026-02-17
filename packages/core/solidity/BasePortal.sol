@@ -14,6 +14,8 @@ abstract contract BasePortal {
     mapping(bytes32 => bool) private issuedMessages;
 
     error EmptyRecipient();
+    error InvalidL2Contract();
+    error InvalidRelayer();
     error MessageAlreadyIssued();
     error MessageAlreadyConsumed();
     error MessageNotIssued();
@@ -27,6 +29,14 @@ abstract contract BasePortal {
     }
 
     constructor(bytes32 protocolId_, address l2Contract_, address relayer_) {
+        if (l2Contract_ == address(0)) {
+            revert InvalidL2Contract();
+        }
+
+        if (relayer_ == address(0)) {
+            revert InvalidRelayer();
+        }
+
         protocolId = protocolId_;
         l2Contract = l2Contract_;
         relayer = relayer_;
@@ -48,7 +58,7 @@ abstract contract BasePortal {
         emit L1ToL2Message(messageHash, content, sender);
     }
 
-    function _consumeL2ToL1Message(bytes32 content, address sender, uint64 nonce) internal {
+    function _consumeL2ToL1Message(bytes32 content, address sender, uint64 nonce) internal onlyRelayer {
         bytes32 messageHash = _buildMessageHash(content, sender, nonce);
 
         if (!issuedMessages[messageHash]) {
