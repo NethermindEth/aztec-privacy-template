@@ -1,3 +1,5 @@
+mod privacy_flags;
+
 mod core {
     mod deposit;
     mod withdraw;
