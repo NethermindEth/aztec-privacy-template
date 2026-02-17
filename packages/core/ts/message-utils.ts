@@ -29,7 +29,12 @@ function stableStringify(value: unknown): string {
   return `{${entries}}`;
 }
 
-export function encodePrivateMessage(chainId: number, recipient: string, action: string, data: Record<string, unknown>): EncodedMessage {
+export function encodePrivateMessage(
+  chainId: number,
+  recipient: string,
+  action: string,
+  data: Record<string, unknown>,
+): EncodedMessage {
   const payloadObj: MessagePayload = {
     chainId,
     recipient,
@@ -50,13 +55,19 @@ function hashString(input: string): string {
   return createHash('sha256').update(input).digest('hex');
 }
 
-export function verifyPrivateMessage(message: EncodedMessage, expectedRecipient: string, expectedAction: string): boolean {
+export function verifyPrivateMessage(
+  message: EncodedMessage,
+  expectedRecipient: string,
+  expectedAction: string,
+): boolean {
   try {
     const parsed = JSON.parse(message.payload) as Partial<MessagePayload>;
 
-    return message.contentHash === hashString(message.payload)
-      && parsed.recipient === expectedRecipient
-      && parsed.action === expectedAction;
+    return (
+      message.contentHash === hashString(message.payload) &&
+      parsed.recipient === expectedRecipient &&
+      parsed.action === expectedAction
+    );
   } catch {
     return false;
   }

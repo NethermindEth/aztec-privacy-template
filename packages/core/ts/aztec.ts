@@ -57,6 +57,11 @@ export class AztecClient {
   }
 
   public sendMessage(message: MessagePayload) {
-    return encodePrivateMessage(this.env.network.chainId, message.recipient, message.action, message.payload);
+    return encodePrivateMessage(
+      this.env.network.chainId,
+      message.recipient,
+      message.action,
+      message.payload,
+    );
   }
 }

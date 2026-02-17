@@ -35,7 +35,9 @@ export class WalletManager {
     }
 
     const descriptor: WalletDescriptor = {
-      address: config.address ? this.normalizeAddress(config.address) : this.deriveAddress(config.owner),
+      address: config.address
+        ? this.normalizeAddress(config.address)
+        : this.deriveAddress(config.owner),
       owner: config.owner,
       type: normalizeWalletType(config.type),
       chainId: config.network.chainId,
@@ -53,7 +55,11 @@ export class WalletManager {
     return this.wallets.get(address);
   }
 
-  public loadOrCreate(address: string, fallbackOwner: string, network: WalletProfile): WalletDescriptor {
+  public loadOrCreate(
+    address: string,
+    fallbackOwner: string,
+    network: WalletProfile,
+  ): WalletDescriptor {
     const normalizedAddress = this.normalizeAddress(address);
     const existing = this.get(normalizedAddress);
     if (existing) {
@@ -74,9 +80,13 @@ export class WalletManager {
       return this.normalizeAddress(normalized);
     }
 
-    return '0x' + normalized.split('').reduce((acc, ch, idx) => {
-      return (acc + ch.charCodeAt(0) + idx).toString(16);
-    }, '').padEnd(40, '0').slice(0, 40);
+    return `0x${normalized
+      .split('')
+      .reduce((acc, ch, idx) => {
+        return (acc + ch.charCodeAt(0) + idx).toString(16);
+      }, '')
+      .padEnd(40, '0')
+      .slice(0, 40)}`;
   }
 
   private normalizeAddress(address: string): string {
