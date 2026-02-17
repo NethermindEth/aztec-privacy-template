@@ -85,7 +85,7 @@ Improve `tests/` so they are:
 
 1. Escape flow is validated end-to-end for each protocol action type.
 
-## Phase 4: Solidity unit tests for core invariants
+## Phase 4: Solidity unit tests for core invariants **COMPLETED**
 
 ### Changes
 

@@ -5,6 +5,8 @@ import "../EscapeHatch.sol";
 
 interface IHevm {
     function roll(uint256) external;
+
+    function deal(address who, uint256 newBalance) external;
 }
 
 contract EscapeTokenMock {
@@ -18,7 +20,7 @@ contract EscapeTokenMock {
         transferResult = result;
     }
 
-    function transfer(address, uint256) external returns (bool) {
+    function transfer(address, uint256) external view returns (bool) {
         return transferResult;
     }
 }
@@ -44,26 +46,23 @@ contract EscapeHatchHarness is EscapeHatch {
 }
 
 contract EscapeHatchTest {
-    IHevm private constant HEVM = IHevm(
-        0x7109709ECfa91a80626fF3989D68f67F5b1DD12D
-    );
+    IHevm private constant HEVM =
+        IHevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
 
-    function testEscapeHatchResolvesRegistrationDefaultsAndClaimsAfterTimeout() external {
+    function testEscapeHatchResolvesRegistrationDefaultsAndClaimsAfterTimeout()
+        external
+    {
         EscapeHatchHarness portal = new EscapeHatchHarness();
         EscapeTokenMock token = new EscapeTokenMock(true);
         uint64 defaultTimeout = portal.DEFAULT_ESCAPE_TIMEOUT();
 
         bytes32 messageHash = keccak256("escape-default-timeout");
 
-        portal.register(
-            messageHash,
-            address(0x1234),
-            address(token),
-            1000,
-            0
-        );
+        portal.register(messageHash, address(0x1234), address(token), 1000, 0);
 
-        EscapeHatch.EscapeRequest memory request = portal.getEscapeRequest(messageHash);
+        EscapeHatch.EscapeRequest memory request = portal.getEscapeRequest(
+            messageHash
+        );
 
         assert(request.depositor == address(0x1234));
         assert(request.token == address(token));
@@ -87,7 +86,9 @@ contract EscapeHatchTest {
         assert(request.claimed);
     }
 
-    function testEscapeHatchRejectsInvalidRegistrationAndDoubleRegistration() external {
+    function testEscapeHatchRejectsInvalidRegistrationAndDoubleRegistration()
+        external
+    {
         EscapeHatchHarness portal = new EscapeHatchHarness();
 
         bytes32 messageHash = keccak256("escape-reject");
@@ -138,7 +139,29 @@ contract EscapeHatchTest {
         assert(notFound);
     }
 
-    function testEscapeHatchTokenTransferFailureRevertsAndDoesNotMarkClaimed() external {
+    function testEscapeHatchNativeClaimSucceedsWhenFunded() external {
+        EscapeHatchHarness portal = new EscapeHatchHarness();
+        bytes32 messageHash = keccak256("escape-native-claim");
+        address depositor = address(0xCAFE);
+        uint256 amount = 1 ether;
+
+        portal.register(messageHash, depositor, address(0), amount, 1);
+        HEVM.deal(address(portal), amount);
+        uint256 balanceBefore = depositor.balance;
+
+        HEVM.roll(block.number + 1);
+        portal.claim(messageHash);
+
+        EscapeHatch.EscapeRequest memory request = portal.getEscapeRequest(
+            messageHash
+        );
+        assert(request.claimed);
+        assert(depositor.balance == balanceBefore + amount);
+    }
+
+    function testEscapeHatchTokenTransferFailureRevertsAndDoesNotMarkClaimed()
+        external
+    {
         EscapeHatchHarness portal = new EscapeHatchHarness();
         EscapeTokenMock token = new EscapeTokenMock(false);
 
@@ -156,7 +179,9 @@ contract EscapeHatchTest {
 
         assert(transferFailed);
 
-        EscapeHatch.EscapeRequest memory request = portal.getEscapeRequest(messageHash);
+        EscapeHatch.EscapeRequest memory request = portal.getEscapeRequest(
+            messageHash
+        );
         assert(!request.claimed);
         assert(request.depositor == address(0xD00D));
     }

@@ -136,6 +136,7 @@ clean:
 	@echo "Cleaning build artifacts..."
 	@rm -rf target
 	@rm -rf cache out
+	@rm -rf packages/core/solidity/cache packages/core/solidity/out
 	@rm -rf coverage .turbo .nyc_output
 
 check:
@@ -144,7 +145,7 @@ check:
 	@$(MAKE) test-core
 
 test-core:
-	@echo "Running core Solidity tests (placeholder)..."
+	@echo "Running core Solidity tests..."
 	@if [ -n "$(CORE_SOL_TESTS)" ]; then \
 		if command -v forge >/dev/null 2>&1; then \
 			(cd packages/core/solidity && forge test); \

@@ -43,6 +43,24 @@ contract UnauthorizedPortalCaller {
 }
 
 contract BasePortalTest {
+    function testBasePortalConstructorRejectsInvalidAddresses() external {
+        bool invalidL2 = false;
+        try new BasePortalHarness(bytes32("BASE_PORTAL"), address(0), address(this)) {
+            invalidL2 = false;
+        } catch {
+            invalidL2 = true;
+        }
+        assert(invalidL2);
+
+        bool invalidRelayer = false;
+        try new BasePortalHarness(bytes32("BASE_PORTAL"), address(0xA11CE), address(0)) {
+            invalidRelayer = false;
+        } catch {
+            invalidRelayer = true;
+        }
+        assert(invalidRelayer);
+    }
+
     function testBasePortalSendGeneratesDeterministicHashesAndMonotonicNonce() external {
         BasePortalHarness portal = new BasePortalHarness(
             bytes32("BASE_PORTAL"),
