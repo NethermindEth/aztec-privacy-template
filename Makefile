@@ -6,7 +6,7 @@ PNPM := pnpm
 YARN := yarn
 BIOME := npx biome
 SOLHINT := npx solhint
-SOLIDITY_FILES := $(shell find . -type f -name '*.sol')
+SOLIDITY_FILES := $(shell find packages tests -type f -name '*.sol' 2>/dev/null)
 
 WORKDIRS := packages/core packages/protocols/aave packages/protocols/uniswap packages/protocols/lido tests tests/e2e tests/e2e/specs docs docs/appendix scripts
 
@@ -32,11 +32,11 @@ help:
 
 install:
 	@echo "Installing workspace dependencies..."
-	@if command -v $(BUN) >/dev/null 2>&1; then \
+	@if [ -f bun.lockb ] && command -v $(BUN) >/dev/null 2>&1; then \
 		$(BUN) install; \
-	elif command -v $(PNPM) >/dev/null 2>&1; then \
+	elif [ -f pnpm-lock.yaml ] && command -v $(PNPM) >/dev/null 2>&1; then \
 		$(PNPM) install; \
-	elif command -v $(YARN) >/dev/null 2>&1; then \
+	elif [ -f yarn.lock ] && command -v $(YARN) >/dev/null 2>&1; then \
 		$(YARN) install; \
 	else \
 		$(NPM) install; \
@@ -44,7 +44,7 @@ install:
 	@echo "Install complete."
 
 fmt:
-	@$(BIOME) format .
+	@$(BIOME) format --write .
 
 fmt-check:
 	@$(BIOME) format --write=false .
@@ -81,7 +81,7 @@ test-e2e:
 
 build:
 	@echo "Building generated artifacts..."
-	@mkdir -p target packages
+	@mkdir -p target
 	@echo "Build pipeline not implemented yet; placeholder target."
 
 clean:

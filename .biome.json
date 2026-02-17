@@ -1,17 +1,17 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.4.2/schema.json",
-  "$version": "2.4.2",
   "vcs": {
     "enabled": false
   },
   "files": {
-    "ignore": [
-      "**/node_modules/**",
-      "**/dist/**",
-      "**/build/**",
-      "**/coverage/**",
-      "target/**",
-      "**/*.sol"
+    "includes": [
+      "**",
+      "!**/node_modules/**",
+      "!**/dist/**",
+      "!**/build/**",
+      "!**/coverage/**",
+      "!target/**",
+      "!**/*.sol"
     ]
   },
   "formatter": {
@@ -19,8 +19,12 @@
     "indentStyle": "space",
     "lineWidth": 100,
     "indentWidth": 2,
-    "lineEnding": "lf",
-    "quoteStyle": "single"
+    "lineEnding": "lf"
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single"
+    }
   },
   "linter": {
     "enabled": true,
