@@ -13,11 +13,12 @@ CORE_SOL_TESTS := $(shell find packages/core/solidity -type f -name "*.t.sol" 2>
 PROTOCOLS := $(filter-out .keep, $(notdir $(wildcard packages/protocols/*)))
 BUILD_PROTOCOLS := $(addprefix build-protocol-,$(PROTOCOLS))
 
-.PHONY: help install fmt fmt-check lint test test-unit test-e2e build build-aztec clean check test-core lint-core protocol-aave protocol-uniswap protocol-lido build-protocol-% dev-sandbox-up dev-sandbox-down
+.PHONY: help install verify-toolchain fmt fmt-check lint test test-unit test-e2e build build-aztec clean check test-core lint-core protocol-aave protocol-uniswap protocol-lido build-protocol-% dev-sandbox-up dev-sandbox-down
 
 help:
 	@printf "Available targets:\n"
-	@printf "  make install         Install dependencies\n"
+	@printf "  make install         Verify toolchain + install dependencies\n"
+	@printf "  make verify-toolchain Check required local tooling\n"
 	@printf "  make fmt             Format supported files\n"
 	@printf "  make fmt-check       Check formatting without writing\n"
 	@printf "  make lint            Run biome + solhint\n"
@@ -35,12 +36,26 @@ help:
 	@printf "  make dev-sandbox-up  Start local E2E services\n"
 	@printf "  make dev-sandbox-down Stop local E2E services\n"
 
-install:
-	@echo "Installing workspace dependencies..."
-	@if ! command -v $(BUN) >/dev/null 2>&1; then \
-		echo "Bun is required for this repo. Install Bun and rerun make install."; \
+verify-toolchain:
+	@echo "Checking required toolchain..."
+	@missing=0; \
+	for tool in bun node aztec forge cast anvil; do \
+		if ! command -v $$tool >/dev/null 2>&1; then \
+			echo "Missing required tool: $$tool"; \
+			missing=1; \
+		fi; \
+	done; \
+	if [ $$missing -ne 0 ]; then \
+		echo ""; \
+		echo "Install prerequisites and rerun:"; \
+		echo "  - Bun: https://bun.sh"; \
+		echo "  - Aztec CLI: https://docs.aztec.network"; \
+		echo "  - Foundry (forge/cast/anvil): https://book.getfoundry.sh/getting-started/installation"; \
 		exit 1; \
 	fi
+
+install: verify-toolchain
+	@echo "Installing workspace dependencies..."
 	$(BUN) install
 	@echo "Install complete."
 
@@ -120,6 +135,7 @@ protocol-lido:
 clean:
 	@echo "Cleaning build artifacts..."
 	@rm -rf target
+	@rm -rf cache out
 	@rm -rf coverage .turbo .nyc_output
 
 check:
