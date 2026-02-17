@@ -4,6 +4,20 @@ import type { AddressConfig, GeneratedConfig, PrivacyConfig, RuntimeConfig } fro
 
 const ADDRESS_REGEX = /^0x[0-9a-fA-F]{40}$/;
 const ALLOWED_KEYS = ['template_version', 'metadata', 'privacy', 'runtime', 'addresses'];
+const ALLOWED_METADATA_KEYS = ['name'];
+const ALLOWED_PRIVACY_KEYS = [
+  'recipient_private',
+  'amount_private',
+  'sender_private',
+  'memo_private',
+];
+const ALLOWED_RUNTIME_KEYS = [
+  'l1_chain_id',
+  'l2_chain_id',
+  'escape_timeout_blocks',
+  'default_gas_limit',
+];
+const ALLOWED_ADDRESS_KEYS = ['l1_portal', 'protocol_contract', 'token_address'];
 
 const DEFAULTS = {
   template_version: 1,
@@ -63,6 +77,52 @@ function ensureKnownKeys(parsed: unknown, source: string): asserts parsed is Con
       throw new Error(`Unknown top-level key '${key}' in ${source}`);
     }
   }
+
+  ensureKnownSectionKeys(
+    (parsed as ConfigSections).metadata,
+    ALLOWED_METADATA_KEYS,
+    source,
+    'metadata',
+  );
+  ensureKnownSectionKeys(
+    (parsed as ConfigSections).privacy,
+    ALLOWED_PRIVACY_KEYS,
+    source,
+    'privacy',
+  );
+  ensureKnownSectionKeys(
+    (parsed as ConfigSections).runtime,
+    ALLOWED_RUNTIME_KEYS,
+    source,
+    'runtime',
+  );
+  ensureKnownSectionKeys(
+    (parsed as ConfigSections).addresses,
+    ALLOWED_ADDRESS_KEYS,
+    source,
+    'addresses',
+  );
+}
+
+function ensureKnownSectionKeys(
+  section: unknown,
+  allowedKeys: string[],
+  source: string,
+  sectionName: string,
+): void {
+  if (section === undefined) {
+    return;
+  }
+
+  if (section === null || typeof section !== 'object' || Array.isArray(section)) {
+    throw new Error(`'${sectionName}' in ${source} must be a TOML table.`);
+  }
+
+  for (const key of Object.keys(section as Record<string, unknown>)) {
+    if (!allowedKeys.includes(key)) {
+      throw new Error(`Unknown key '${sectionName}.${key}' in ${source}`);
+    }
+  }
 }
 
 function readConfig(path: string): ConfigSections {
@@ -95,6 +155,13 @@ function requireAddress(value: unknown, source: string): string {
     throw new Error(`Expected hex address for '${source}'`);
   }
   return value;
+}
+
+function requireNonEmptyString(value: unknown, source: string): string {
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    throw new Error(`Expected non-empty string for '${source}'`);
+  }
+  return value.trim();
 }
 
 function toConstantName(field: string): string {
@@ -167,7 +234,7 @@ function mergeSections(
   const normalized: GeneratedConfig = {
     templateVersion: requireNumber(merged.templateVersion, 'template_version'),
     metadata: {
-      name: merged.metadataName,
+      name: requireNonEmptyString(merged.metadataName, 'metadata.name'),
     },
     privacy: {
       recipientPrivate: requireBoolean(

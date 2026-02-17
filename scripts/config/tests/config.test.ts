@@ -72,6 +72,48 @@ test('loadConfigPair applies per-protocol override precedence', () => {
   rmSync(dir, { recursive: true, force: true });
 });
 
+test('loadConfigPair rejects unknown nested keys', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'config-test-'));
+  const templatePath = join(dir, 'template.toml');
+  const protocolPath = join(dir, 'protocol.toml');
+
+  writeConfig(templatePath, TEMPLATE);
+  writeConfig(
+    protocolPath,
+    `
+[runtime]
+unexpected_key = 1
+`,
+  );
+
+  assert.throws(() => {
+    loadConfigPair(templatePath, protocolPath);
+  }, /Unknown key 'runtime.unexpected_key'/);
+
+  rmSync(dir, { recursive: true, force: true });
+});
+
+test('loadConfigPair rejects empty metadata name', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'config-test-'));
+  const templatePath = join(dir, 'template.toml');
+  const protocolPath = join(dir, 'protocol.toml');
+
+  writeConfig(templatePath, TEMPLATE);
+  writeConfig(
+    protocolPath,
+    `
+[metadata]
+name = "   "
+`,
+  );
+
+  assert.throws(() => {
+    loadConfigPair(templatePath, protocolPath);
+  }, /Expected non-empty string for 'metadata.name'/);
+
+  rmSync(dir, { recursive: true, force: true });
+});
+
 test('privacyFlagsNoir output is deterministic', () => {
   const config = {
     templateVersion: 1,
