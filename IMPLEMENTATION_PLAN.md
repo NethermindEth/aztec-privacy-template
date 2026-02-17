@@ -145,7 +145,7 @@ Exit criteria:
 
 - Lido core path fully green in same orchestration flow.
 
-## Phase 6: Unified E2E Harness and Modes
+## Phase 6: Unified E2E Harness and Modes **COMPLETE**
 
 Goal: make one reusable E2E system and execution-mode parity.
 
