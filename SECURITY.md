@@ -5,7 +5,7 @@
 The template focuses on a small, auditable boundary:
 
 - Core abstractions are protocol-agnostic and immutable in review scope.
-- Protocol-specific behavior is isolated under `packages/<protocol>/`.
+- Protocol-specific behavior is isolated under `packages/protocols/<protocol>/`.
 - Generated constants are deterministic and derived from config only.
 
 ## Recommended controls

@@ -11,9 +11,9 @@ This template emits privacy knobs from config as deterministic generated constan
 
 Each value is merged from `template.toml` and protocol overrides, then written to:
 
-- `packages/<protocol>/generated/privacy_flags.nr`
-- `packages/<protocol>/generated/protocol_constants.ts`
-- `packages/<protocol>/generated/PortalConstants.sol`
+- `packages/protocols/<protocol>/generated/privacy_flags.nr`
+- `packages/protocols/<protocol>/generated/protocol_constants.ts`
+- `packages/protocols/<protocol>/generated/PortalConstants.sol`
 
 ## What the current scaffold provides
 

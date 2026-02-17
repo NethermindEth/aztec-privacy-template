@@ -57,11 +57,11 @@ Each protocol ships with a working core flow first:
 Core behavior is defined by:
 
 - `template.toml` shared config
-- Per-protocol `packages/<protocol>/config.toml` overrides
-- Generated artifacts under `packages/<protocol>/generated`
-- Protocol-specific Noir core modules under `packages/<protocol>/noir/src/core`
-- Protocol clients under `packages/<protocol>/ts`
-- Protocol portals under `packages/<protocol>/solidity`
+- Per-protocol `packages/protocols/<protocol>/config.toml` overrides
+- Generated artifacts under `packages/protocols/<protocol>/generated`
+- Protocol-specific Noir core modules under `packages/protocols/<protocol>/noir/src/core`
+- Protocol clients under `packages/protocols/<protocol>/ts`
+- Protocol portals under `packages/protocols/<protocol>/solidity`
 - Protocol E2E spec adapters under `tests/e2e/specs`
 
 Appendix references for each protocol flow:
@@ -75,9 +75,9 @@ Appendix references for each protocol flow:
 
 Generated artifacts are produced from config merges and should not be hand-edited.
 
-- `packages/<protocol>/generated/privacy_flags.nr`
-- `packages/<protocol>/generated/protocol_constants.ts`
-- `packages/<protocol>/generated/PortalConstants.sol`
+- `packages/protocols/<protocol>/generated/privacy_flags.nr`
+- `packages/protocols/<protocol>/generated/protocol_constants.ts`
+- `packages/protocols/<protocol>/generated/PortalConstants.sol`
 
 Re-run `make build` whenever config changes.
 
@@ -91,7 +91,7 @@ Optional modules are intentionally separated so teams can adopt incrementally:
 
 Each option is controlled by `modules.*` flags in config and gates compiled constants.
 
-See `docs/appendix/optional-modules.md` for details and `packages/<protocol>/noir/src/modules`.
+See `docs/appendix/optional-modules.md` for details and `packages/protocols/<protocol>/noir/src/modules`.
 
 ## Development workflow
 

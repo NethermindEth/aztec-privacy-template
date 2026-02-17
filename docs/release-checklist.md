@@ -12,7 +12,7 @@ Use this checklist before tagging a release or publishing a fork starter branch.
 - [ ] `make test-core`
 - [ ] `make test`
 - [ ] `make test-e2e`
-- [ ] Protocol sanity checks for each `packages/<protocol>` path
+- [ ] Protocol sanity checks for each `packages/protocols/<protocol>` path
 
 ## Documentation checks
 

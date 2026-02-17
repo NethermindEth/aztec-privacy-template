@@ -26,13 +26,13 @@ Core modules are intentionally minimal and should not embed protocol-specific as
 
 Each protocol keeps consistent structure:
 
-- `packages/<protocol>/config.toml`
-- `packages/<protocol>/generated/*` (derived from config)
-- `packages/<protocol>/noir/src/core/*`
-- `packages/<protocol>/noir/src/modules/*` (optional feature modules)
-- `packages/<protocol>/ts/*.ts`
-- `packages/<protocol>/solidity/*`
-- `packages/<protocol>/solidity/test/*`
+- `packages/protocols/<protocol>/config.toml`
+- `packages/protocols/<protocol>/generated/*` (derived from config)
+- `packages/protocols/<protocol>/noir/src/core/*`
+- `packages/protocols/<protocol>/noir/src/modules/*` (optional feature modules)
+- `packages/protocols/<protocol>/ts/*.ts`
+- `packages/protocols/<protocol>/solidity/*`
+- `packages/protocols/<protocol>/solidity/test/*`
 
 ### Data and flag flow
 

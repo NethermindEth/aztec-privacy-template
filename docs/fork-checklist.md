@@ -13,7 +13,7 @@ Use this checklist when creating a fork from this template.
   make build
   ```
 
-- [ ] Update `packages/<protocol>/config.toml` for fork-specific constraints.
+- [ ] Update `packages/protocols/<protocol>/config.toml` for fork-specific constraints.
 - [ ] Update deployment endpoints / RPC values in core environment wrappers as needed.
 
 ## Protocol selection

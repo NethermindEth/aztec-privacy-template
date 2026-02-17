@@ -1,23 +1,23 @@
 # Adding a New Protocol
 
-This template is designed so protocol work is isolated to one folder under `packages/<protocol>/`.
+This template is designed so protocol work is isolated to one folder under `packages/protocols/<protocol>/`.
 
 ## 1) Scaffold directories
 
 Create the minimal set:
 
-- `packages/<protocol>/config.toml`
-- `packages/<protocol>/generated` (created by build)
-- `packages/<protocol>/noir/src/core`
-- `packages/<protocol>/noir/src/modules` (optional features)
-- `packages/<protocol>/solidity`
-- `packages/<protocol>/solidity/test`
-- `packages/<protocol>/ts`
-- `packages/<protocol>/ts/<protocol>.test.ts`
+- `packages/protocols/<protocol>/config.toml`
+- `packages/protocols/<protocol>/generated` (created by build)
+- `packages/protocols/<protocol>/noir/src/core`
+- `packages/protocols/<protocol>/noir/src/modules` (optional features)
+- `packages/protocols/<protocol>/solidity`
+- `packages/protocols/<protocol>/solidity/test`
+- `packages/protocols/<protocol>/ts`
+- `packages/protocols/<protocol>/ts/<protocol>.test.ts`
 
 ## 2) Add protocol config
 
-Add `packages/<protocol>/config.toml` with minimal overrides:
+Add `packages/protocols/<protocol>/config.toml` with minimal overrides:
 
 ```toml
 [metadata]
@@ -67,7 +67,7 @@ Only include values you need changed; all unspecified values inherit from `templ
 
 ## 5) Implement protocol TS client
 
-- Add request builders in `packages/<protocol>/ts/<protocol>.ts`.
+- Add request builders in `packages/protocols/<protocol>/ts/<protocol>.ts`.
 - Reuse generated constants from `generated/protocol_constants.ts`.
 - Add tests in `<protocol>.test.ts`.
 
@@ -85,13 +85,15 @@ Only include values you need changed; all unspecified values inherit from `templ
 
 ## 8) Regenerate artifacts and wire to docs
 
-1. Rebuild all protocol artifacts:
+1. Generate protocol artifacts:
 
    ```bash
-   make protocol-<protocol>
+   bun run scripts/config/src/cli.ts --template=template.toml --protocol=<protocol> --protocol-config=packages/protocols/<protocol>/config.toml --out-dir=packages/protocols/<protocol>/generated
    ```
 
-2. Update:
+2. Add a `Makefile` target for `protocol-<protocol>` if you want this command to be available via `make`.
+
+3. Update:
    - `docs/appendix/<protocol>-core-flow.md` for protocol details
    - release/fork impact in related docs if needed
 
@@ -106,7 +108,7 @@ Only include values you need changed; all unspecified values inherit from `templ
 Optional local checks:
 
 - `make test` for full repo test command path
-- `bun test packages/<protocol>/ts/<protocol>.test.ts`
+- `bun test packages/protocols/<protocol>/ts/<protocol>.test.ts`
 
 ## 10) Keep behavior additive
 
