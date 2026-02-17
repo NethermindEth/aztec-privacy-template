@@ -161,6 +161,17 @@ function aaveExecuteArgs(
 	];
 }
 
+function aaveWithdrawRequestArgs(content: string): string[] {
+	return [content, AAVE_REQUEST_AMOUNT];
+}
+
+function aaveWithdrawExecuteArgs(
+	content: string,
+	amount = AAVE_REQUEST_AMOUNT,
+): string[] {
+	return [content, USER_ADDRESS, amount, NONCE_ONE, DEFAULT_TIMEOUT_BLOCKS];
+}
+
 function aaveRequestHash(
 	portalAddress: string,
 	content: string,
@@ -450,6 +461,94 @@ test(
 				context.portalAddress,
 				"executeDeposit(bytes32,address,uint256,uint16,uint64,uint64)",
 				aaveExecuteArgs(context.content),
+			);
+
+			const escapeRequest = getEscapeRequest(
+				context.portalAddress,
+				requestHash,
+			);
+			assert.equal(escapeRequest.depositor.toLowerCase(), USER_ADDRESS);
+			assert.equal(
+				escapeRequest.token.toLowerCase(),
+				context.mocks.AAVE_MOCK_ERC20,
+			);
+			assert.equal(escapeRequest.amount, BigInt(AAVE_REQUEST_AMOUNT));
+			assert.equal(escapeRequest.timeoutBlocks, BigInt(DEFAULT_TIMEOUT_BLOCKS));
+			assert.equal(escapeRequest.claimed, false);
+
+			assert.equal(
+				castCall(
+					context.portalAddress,
+					"hasMessageBeenConsumed(bytes32)(bool)",
+					[requestHash],
+				),
+				"true",
+			);
+
+			assert.throws(() => {
+				castSend(
+					USER_PRIVATE_KEY,
+					context.portalAddress,
+					"claimEscape(bytes32)",
+					[requestHash],
+				);
+			});
+
+			mineBlocks(Number(DEFAULT_TIMEOUT_BLOCKS));
+
+			castSend(
+				USER_PRIVATE_KEY,
+				context.portalAddress,
+				"claimEscape(bytes32)",
+				[requestHash],
+			);
+
+			const claimedRequest = getEscapeRequest(
+				context.portalAddress,
+				requestHash,
+			);
+			assert.equal(claimedRequest.claimed, true);
+		});
+	},
+);
+
+test(
+	"Aave E2E: failed withdraw execution registers escape and can be claimed after timeout",
+	{
+		timeout: 900_000,
+	},
+	async () => {
+		await withAaveFlowTeardown((context) => {
+			castSend(
+				USER_PRIVATE_KEY,
+				context.mocks.AAVE_MOCK_POOL,
+				"setShouldFail(bool)",
+				["true"],
+			);
+			castSend(
+				USER_PRIVATE_KEY,
+				context.mocks.AAVE_MOCK_ERC20,
+				"mint(address,uint256)",
+				[context.portalAddress, AAVE_REQUEST_AMOUNT],
+			);
+
+			castSend(
+				USER_PRIVATE_KEY,
+				context.portalAddress,
+				"requestWithdraw(bytes32,uint256)",
+				aaveWithdrawRequestArgs(context.content),
+			);
+			const requestHash = aaveRequestHash(
+				context.portalAddress,
+				context.content,
+				NONCE_ONE,
+			);
+
+			castSend(
+				RELAYER_PRIVATE_KEY,
+				context.portalAddress,
+				"executeWithdraw(bytes32,address,uint256,uint64,uint64)",
+				aaveWithdrawExecuteArgs(context.content),
 			);
 
 			const escapeRequest = getEscapeRequest(

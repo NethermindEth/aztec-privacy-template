@@ -28,6 +28,7 @@ const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 const ONE_ETH_WEI = "1000000000000000000";
 const DEFAULT_TIMEOUT_BLOCKS = "20";
 const NONCE_ONE = "1";
+const NONCE_TWO = "2";
 
 type EscapeRequest = {
 	depositor: string;
@@ -162,6 +163,20 @@ function executeArgs(
 		NONCE_ONE,
 		DEFAULT_TIMEOUT_BLOCKS,
 	];
+}
+
+function requestUnstakeArgs(content: string): string[] {
+	return [content, ONE_ETH_WEI, USER_ADDRESS];
+}
+
+function executeUnstakeArgs(
+	content: string,
+	nonce = NONCE_TWO,
+	amount = ONE_ETH_WEI,
+	sender = USER_ADDRESS,
+	recipient = USER_ADDRESS,
+): string[] {
+	return [content, sender, amount, recipient, nonce, DEFAULT_TIMEOUT_BLOCKS];
 }
 
 const LIDO_FLOW: ProtocolFlowSpec = {
@@ -439,6 +454,99 @@ test(
 				"executeStake(bytes32,address,uint256,address,address,uint64,uint64)",
 				executeArgs(context.content),
 				ONE_ETH_WEI,
+			);
+
+			const escapeRequest = getEscapeRequest(
+				context.portalAddress,
+				requestHashValue,
+			);
+			assert.equal(escapeRequest.depositor.toLowerCase(), USER_ADDRESS);
+			assert.equal(escapeRequest.token.toLowerCase(), ZERO_ADDRESS);
+			assert.equal(escapeRequest.amount, BigInt(ONE_ETH_WEI));
+			assert.equal(escapeRequest.timeoutBlocks, BigInt(DEFAULT_TIMEOUT_BLOCKS));
+			assert.equal(escapeRequest.claimed, false);
+
+			assert.equal(
+				castCall(
+					context.portalAddress,
+					"hasMessageBeenConsumed(bytes32)(bool)",
+					[requestHashValue],
+				),
+				"true",
+			);
+
+			assert.throws(() => {
+				castSend(
+					USER_PRIVATE_KEY,
+					context.portalAddress,
+					"claimEscape(bytes32)",
+					[requestHashValue],
+				);
+			});
+
+			mineBlocks(Number(DEFAULT_TIMEOUT_BLOCKS));
+
+			castSend(
+				USER_PRIVATE_KEY,
+				context.portalAddress,
+				"claimEscape(bytes32)",
+				[requestHashValue],
+			);
+
+			const claimedRequest = getEscapeRequest(
+				context.portalAddress,
+				requestHashValue,
+			);
+			assert.equal(claimedRequest.claimed, true);
+		});
+	},
+);
+
+test(
+	"Lido E2E: failed unstake execution registers escape and can be claimed after timeout",
+	{
+		timeout: 900_000,
+	},
+	async () => {
+		await withLidoFlowTeardown((context) => {
+			castSend(
+				USER_PRIVATE_KEY,
+				context.mocks.LIDO_MOCK_PROTOCOL,
+				"setShouldFail(bool)",
+				["true"],
+			);
+
+			castSend(
+				USER_PRIVATE_KEY,
+				context.portalAddress,
+				"requestStake(bytes32,uint256,address,address)",
+				requestArgs(context.content),
+			);
+			castSend(
+				RELAYER_PRIVATE_KEY,
+				context.portalAddress,
+				"executeStake(bytes32,address,uint256,address,address,uint64,uint64)",
+				executeArgs(context.content),
+				ONE_ETH_WEI,
+			);
+
+			castSend(
+				USER_PRIVATE_KEY,
+				context.portalAddress,
+				"requestUnstake(bytes32,uint256,address)",
+				requestUnstakeArgs(context.content),
+			);
+			const requestHashValue = requestHash(
+				context.portalAddress,
+				context.content,
+				NONCE_TWO,
+			);
+
+			castSend(
+				RELAYER_PRIVATE_KEY,
+				context.portalAddress,
+				"executeUnstake(bytes32,address,uint256,address,uint64,uint64)",
+				executeUnstakeArgs(context.content),
 			);
 
 			const escapeRequest = getEscapeRequest(
