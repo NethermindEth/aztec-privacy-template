@@ -1,6 +1,20 @@
 import { strict as assert } from 'node:assert';
 import test from 'node:test';
-import { USER_ADDRESS, USER_PRIVATE_KEY, castCall, castSend } from './runtime';
+import {
+  RELAYER_ADDRESS,
+  RELAYER_PRIVATE_KEY,
+  USER_ADDRESS,
+  USER_PRIVATE_KEY,
+  castCall,
+  castKeccak,
+  castSend,
+  compileAztecContract,
+  deployL1,
+  ensureAztecLocalNetwork,
+  provisionPrivateTokenBalance,
+  stopProcess,
+  type LocalRuntime,
+} from './runtime';
 import { runProtocolE2EHappyPath, type ProtocolFlowSpec } from './e2e-flow';
 
 const PROTOCOL_ID = `0x${'11'.repeat(32)}`;
@@ -9,6 +23,85 @@ const AAVE_SOLIDITY_DIR = 'packages/protocols/aave/solidity';
 const AAVE_MOCKS_SOLIDITY_DIR = 'tests/mocks/aave/solidity';
 const TEST_TAG = 'AAVE';
 const LP_TOKEN_MOCK_LIQUIDITY = '1000000000000000000000';
+const AAVE_REQUEST_AMOUNT = '1000';
+const AAVE_REFERRAL_CODE = '0';
+const DEFAULT_TIMEOUT_BLOCKS = '20';
+const NONCE_ONE = '1';
+
+type AaveTestContext = {
+  runtime: LocalRuntime;
+  content: string;
+  portalAddress: string;
+  mocks: {
+    AAVE_MOCK_ERC20: string;
+    AAVE_MOCK_POOL: string;
+  };
+};
+
+async function buildAaveTestContext(): Promise<AaveTestContext> {
+  const runtime = await ensureAztecLocalNetwork();
+  compileAztecContract(AAVE_AZTEC_DIR);
+
+  const aztecState = await provisionPrivateTokenBalance('Aave Privacy Token', 'APT', 1_000n);
+  const content = castKeccak(`aave-deposit:${aztecState.ownerAddress}:${aztecState.balance}`);
+
+  const mockERC20 = deployL1(
+    'tests/mocks/aave/solidity/MockERC20.sol:MockERC20',
+    AAVE_MOCKS_SOLIDITY_DIR,
+  );
+  const mockPool = deployL1(
+    'tests/mocks/aave/solidity/MockAavePool.sol:MockAavePool',
+    AAVE_MOCKS_SOLIDITY_DIR,
+  );
+  const portalAddress = deployL1(
+    'packages/protocols/aave/solidity/AavePortal.sol:AavePortal',
+    AAVE_SOLIDITY_DIR,
+    [PROTOCOL_ID, USER_ADDRESS, RELAYER_ADDRESS, mockPool, mockERC20],
+  );
+
+  castSend(USER_PRIVATE_KEY, mockERC20, 'mint(address,uint256)', [
+    mockPool,
+    LP_TOKEN_MOCK_LIQUIDITY,
+  ]);
+
+  return {
+    runtime,
+    content,
+    portalAddress,
+    mocks: {
+      AAVE_MOCK_ERC20: mockERC20,
+      AAVE_MOCK_POOL: mockPool,
+    },
+  };
+}
+
+async function withAaveFlowTeardown(
+  fn: (context: AaveTestContext) => Promise<void> | void,
+): Promise<void> {
+  const context = await buildAaveTestContext();
+
+  try {
+    await fn(context);
+  } finally {
+    await stopProcess(context.runtime.process);
+  }
+}
+
+function aaveRequestArgs(content: string): string[] {
+  return [content, AAVE_REQUEST_AMOUNT, AAVE_REFERRAL_CODE];
+}
+
+function aaveExecuteArgs(content: string, amount = AAVE_REQUEST_AMOUNT): string[] {
+  return [content, USER_ADDRESS, amount, AAVE_REFERRAL_CODE, NONCE_ONE, DEFAULT_TIMEOUT_BLOCKS];
+}
+
+function aaveRequestHash(portalAddress: string, content: string, nonce: string): string {
+  return castCall(portalAddress, 'messageHashFor(bytes32,address,uint64)(bytes32)', [
+    content,
+    USER_ADDRESS,
+    nonce,
+  ]);
+}
 
 const AAVE_FLOW: ProtocolFlowSpec = {
   tag: TEST_TAG,
@@ -51,24 +144,119 @@ const AAVE_FLOW: ProtocolFlowSpec = {
   },
   request: {
     signature: 'requestDeposit(bytes32,uint256,uint16)',
-    args: ({ content }) => [content, '1000', '0'],
+    args: ({ content }) => aaveRequestArgs(content),
   },
   execute: {
     signature: 'executeDeposit(bytes32,address,uint256,uint16,uint64,uint64)',
-    args: ({ content, userAddress }) => [content, userAddress, '1000', '0', '1', '20'],
+    args: ({ content }) => aaveExecuteArgs(content),
   },
-  assertState: ({ mocks }) => {
+  assertState: ({ mocks, userAddress }) => {
     const lastAmountRaw = castCall(mocks.AAVE_MOCK_POOL, 'lastAmount()(uint256)');
-    assert.equal(BigInt(lastAmountRaw), 1000n);
+    assert.equal(BigInt(lastAmountRaw), BigInt(AAVE_REQUEST_AMOUNT));
 
     const lastOnBehalfOf = castCall(mocks.AAVE_MOCK_POOL, 'lastOnBehalfOf()(address)');
-    assert.equal(lastOnBehalfOf.toLowerCase(), USER_ADDRESS);
+    assert.equal(lastOnBehalfOf.toLowerCase(), userAddress);
 
     const lastReferralCodeRaw = castCall(mocks.AAVE_MOCK_POOL, 'lastReferralCode()(uint16)');
-    assert.equal(Number(lastReferralCodeRaw), 0);
+    assert.equal(Number(lastReferralCodeRaw), Number(AAVE_REFERRAL_CODE));
   },
 };
 
 test('Aave E2E: Aztec private token + L1 Aave portal flow', { timeout: 900_000 }, async () => {
   await runProtocolE2EHappyPath(AAVE_FLOW);
+});
+
+test('Aave E2E: unauthorized relayer cannot execute deposit', { timeout: 900_000 }, async () => {
+  await withAaveFlowTeardown(async (context) => {
+    castSend(
+      USER_PRIVATE_KEY,
+      context.portalAddress,
+      'requestDeposit(bytes32,uint256,uint16)',
+      aaveRequestArgs(context.content),
+    );
+
+    assert.throws(() => {
+      castSend(
+        USER_PRIVATE_KEY,
+        context.portalAddress,
+        'executeDeposit(bytes32,address,uint256,uint16,uint64,uint64)',
+        aaveExecuteArgs(context.content),
+      );
+    });
+  });
+});
+
+test('Aave E2E: invalid deposit request amount is rejected', { timeout: 900_000 }, async () => {
+  await withAaveFlowTeardown((context) => {
+    assert.throws(() => {
+      castSend(USER_PRIVATE_KEY, context.portalAddress, 'requestDeposit(bytes32,uint256,uint16)', [
+        context.content,
+        '0',
+        AAVE_REFERRAL_CODE,
+      ]);
+    });
+  });
+});
+
+test('Aave E2E: duplicate execute for same request is rejected', { timeout: 900_000 }, async () => {
+  await withAaveFlowTeardown((context) => {
+    castSend(
+      USER_PRIVATE_KEY,
+      context.portalAddress,
+      'requestDeposit(bytes32,uint256,uint16)',
+      aaveRequestArgs(context.content),
+    );
+    castSend(
+      RELAYER_PRIVATE_KEY,
+      context.portalAddress,
+      'executeDeposit(bytes32,address,uint256,uint16,uint64,uint64)',
+      aaveExecuteArgs(context.content),
+    );
+
+    const requestHash = aaveRequestHash(context.portalAddress, context.content, NONCE_ONE);
+    assert.equal(
+      castCall(context.portalAddress, 'hasMessageBeenConsumed(bytes32)(bool)', [requestHash]),
+      'true',
+    );
+
+    assert.throws(() => {
+      castSend(
+        RELAYER_PRIVATE_KEY,
+        context.portalAddress,
+        'executeDeposit(bytes32,address,uint256,uint16,uint64,uint64)',
+        aaveExecuteArgs(context.content),
+      );
+    });
+  });
+});
+
+test('Aave E2E: request mismatch blocks execution', { timeout: 900_000 }, async () => {
+  await withAaveFlowTeardown((context) => {
+    castSend(
+      USER_PRIVATE_KEY,
+      context.portalAddress,
+      'requestDeposit(bytes32,uint256,uint16)',
+      aaveRequestArgs(context.content),
+    );
+    const requestHash = aaveRequestHash(context.portalAddress, context.content, NONCE_ONE);
+
+    assert.equal(
+      castCall(context.portalAddress, 'hasMessageBeenConsumed(bytes32)(bool)', [requestHash]),
+      'false',
+    );
+
+    assert.throws(() => {
+      castSend(
+        RELAYER_PRIVATE_KEY,
+        context.portalAddress,
+        'executeDeposit(bytes32,address,uint256,uint16,uint64,uint64)',
+        aaveExecuteArgs(context.content, '999'),
+      );
+    });
+
+    assert.equal(
+      castCall(context.portalAddress, 'hasMessageBeenConsumed(bytes32)(bool)', [requestHash]),
+      'false',
+    );
+  });
 });

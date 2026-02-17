@@ -1,6 +1,20 @@
 import { strict as assert } from 'node:assert';
 import test from 'node:test';
-import { USER_ADDRESS, castCall } from './runtime';
+import {
+  RELAYER_ADDRESS,
+  RELAYER_PRIVATE_KEY,
+  USER_ADDRESS,
+  USER_PRIVATE_KEY,
+  castCall,
+  castKeccak,
+  castSend,
+  compileAztecContract,
+  deployL1,
+  ensureAztecLocalNetwork,
+  provisionPrivateTokenBalance,
+  stopProcess,
+  type LocalRuntime,
+} from './runtime';
 import { runProtocolE2EHappyPath, type ProtocolFlowSpec } from './e2e-flow';
 
 const PROTOCOL_ID = `0x${'33'.repeat(32)}`;
@@ -10,6 +24,73 @@ const LIDO_MOCKS_SOLIDITY_DIR = 'tests/mocks/lido/solidity';
 const TEST_TAG = 'LIDO';
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 const ONE_ETH_WEI = '1000000000000000000';
+const DEFAULT_TIMEOUT_BLOCKS = '20';
+const NONCE_ONE = '1';
+
+type LidoTestContext = {
+  runtime: LocalRuntime;
+  content: string;
+  portalAddress: string;
+  mocks: {
+    LIDO_MOCK_PROTOCOL: string;
+  };
+};
+
+async function buildLidoTestContext(): Promise<LidoTestContext> {
+  const runtime = await ensureAztecLocalNetwork();
+  compileAztecContract(LIDO_AZTEC_DIR);
+
+  const aztecState = await provisionPrivateTokenBalance('Lido Privacy Receipt', 'LPR', 1_000n);
+  const content = castKeccak(`lido-stake:${aztecState.ownerAddress}:${aztecState.balance}`);
+
+  const protocol = deployL1(
+    'tests/mocks/lido/solidity/MockLidoProtocol.sol:MockLidoProtocol',
+    LIDO_MOCKS_SOLIDITY_DIR,
+  );
+
+  const portalAddress = deployL1(
+    'packages/protocols/lido/solidity/LidoPortal.sol:LidoPortal',
+    LIDO_SOLIDITY_DIR,
+    [PROTOCOL_ID, USER_ADDRESS, RELAYER_ADDRESS, protocol],
+  );
+
+  return {
+    runtime,
+    content,
+    portalAddress,
+    mocks: {
+      LIDO_MOCK_PROTOCOL: protocol,
+    },
+  };
+}
+
+async function withLidoFlowTeardown(
+  fn: (context: LidoTestContext) => Promise<void> | void,
+): Promise<void> {
+  const context = await buildLidoTestContext();
+
+  try {
+    await fn(context);
+  } finally {
+    await stopProcess(context.runtime.process);
+  }
+}
+
+function requestHash(portalAddress: string, content: string, nonce: string): string {
+  return castCall(portalAddress, 'messageHashFor(bytes32,address,uint64)(bytes32)', [
+    content,
+    USER_ADDRESS,
+    nonce,
+  ]);
+}
+
+function requestArgs(content: string): string[] {
+  return [content, ONE_ETH_WEI, USER_ADDRESS, ZERO_ADDRESS];
+}
+
+function executeArgs(content: string, amount = ONE_ETH_WEI, sender = USER_ADDRESS): string[] {
+  return [content, sender, amount, USER_ADDRESS, ZERO_ADDRESS, NONCE_ONE, DEFAULT_TIMEOUT_BLOCKS];
+}
 
 const LIDO_FLOW: ProtocolFlowSpec = {
   tag: TEST_TAG,
@@ -50,21 +131,122 @@ const LIDO_FLOW: ProtocolFlowSpec = {
       ONE_ETH_WEI,
       userAddress,
       ZERO_ADDRESS,
-      '1',
-      '20',
+      NONCE_ONE,
+      DEFAULT_TIMEOUT_BLOCKS,
     ],
     valueWei: ONE_ETH_WEI,
   },
-  assertState: ({ mocks }) => {
+  assertState: ({ mocks, userAddress }) => {
     const lastAmountRaw = castCall(mocks.LIDO_MOCK_PROTOCOL, 'lastAmount()(uint256)');
     const lastAmount = BigInt(lastAmountRaw.split(' ')[0]);
-    assert.equal(lastAmount, 1_000_000_000_000_000_000n);
+    assert.equal(lastAmount, BigInt(ONE_ETH_WEI));
 
     const lastStakeRecipient = castCall(mocks.LIDO_MOCK_PROTOCOL, 'lastStakeRecipient()(address)');
-    assert.equal(lastStakeRecipient.toLowerCase(), USER_ADDRESS);
+    assert.equal(lastStakeRecipient.toLowerCase(), userAddress);
   },
 };
 
 test('Lido E2E: Aztec private state + L1 Lido portal flow', { timeout: 900_000 }, async () => {
   await runProtocolE2EHappyPath(LIDO_FLOW);
+});
+
+test('Lido E2E: unauthorized relayer cannot execute stake', { timeout: 900_000 }, async () => {
+  await withLidoFlowTeardown((context) => {
+    castSend(
+      USER_PRIVATE_KEY,
+      context.portalAddress,
+      'requestStake(bytes32,uint256,address,address)',
+      requestArgs(context.content),
+    );
+
+    assert.throws(() => {
+      castSend(
+        USER_PRIVATE_KEY,
+        context.portalAddress,
+        'executeStake(bytes32,address,uint256,address,address,uint64,uint64)',
+        executeArgs(context.content),
+        ONE_ETH_WEI,
+      );
+    });
+  });
+});
+
+test('Lido E2E: request validation rejects zero recipient', { timeout: 900_000 }, async () => {
+  await withLidoFlowTeardown((context) => {
+    assert.throws(() => {
+      castSend(
+        USER_PRIVATE_KEY,
+        context.portalAddress,
+        'requestStake(bytes32,uint256,address,address)',
+        [context.content, ONE_ETH_WEI, ZERO_ADDRESS, ZERO_ADDRESS],
+      );
+    });
+  });
+});
+
+test('Lido E2E: duplicate execute for same request is rejected', { timeout: 900_000 }, async () => {
+  await withLidoFlowTeardown((context) => {
+    castSend(
+      USER_PRIVATE_KEY,
+      context.portalAddress,
+      'requestStake(bytes32,uint256,address,address)',
+      requestArgs(context.content),
+    );
+
+    castSend(
+      RELAYER_PRIVATE_KEY,
+      context.portalAddress,
+      'executeStake(bytes32,address,uint256,address,address,uint64,uint64)',
+      executeArgs(context.content),
+      ONE_ETH_WEI,
+    );
+
+    const hash = requestHash(context.portalAddress, context.content, NONCE_ONE);
+    assert.equal(
+      castCall(context.portalAddress, 'hasMessageBeenConsumed(bytes32)(bool)', [hash]),
+      'true',
+    );
+
+    assert.throws(() => {
+      castSend(
+        RELAYER_PRIVATE_KEY,
+        context.portalAddress,
+        'executeStake(bytes32,address,uint256,address,address,uint64,uint64)',
+        executeArgs(context.content),
+        ONE_ETH_WEI,
+      );
+    });
+  });
+});
+
+test('Lido E2E: request mismatch blocks execution', { timeout: 900_000 }, async () => {
+  await withLidoFlowTeardown((context) => {
+    castSend(
+      USER_PRIVATE_KEY,
+      context.portalAddress,
+      'requestStake(bytes32,uint256,address,address)',
+      requestArgs(context.content),
+    );
+    const hash = requestHash(context.portalAddress, context.content, NONCE_ONE);
+
+    assert.equal(
+      castCall(context.portalAddress, 'hasMessageBeenConsumed(bytes32)(bool)', [hash]),
+      'false',
+    );
+
+    assert.throws(() => {
+      castSend(
+        RELAYER_PRIVATE_KEY,
+        context.portalAddress,
+        'executeStake(bytes32,address,uint256,address,address,uint64,uint64)',
+        executeArgs(context.content, ONE_ETH_WEI, ZERO_ADDRESS),
+        ONE_ETH_WEI,
+      );
+    });
+
+    assert.equal(
+      castCall(context.portalAddress, 'hasMessageBeenConsumed(bytes32)(bool)', [hash]),
+      'false',
+    );
+  });
 });
