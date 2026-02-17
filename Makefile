@@ -1,8 +1,6 @@
 SHELL := /usr/bin/env bash
 
 BUN := bun
-PNPM := pnpm
-YARN := yarn
 BIOME := bunx biome
 SOLHINT := bunx solhint
 SOLIDITY_FILES := $(shell find packages tests -type f -name '*.sol' 2>/dev/null)
@@ -36,16 +34,11 @@ help:
 
 install:
 	@echo "Installing workspace dependencies..."
-	@if command -v $(BUN) >/dev/null 2>&1; then \
-		$(BUN) install; \
-	elif [ -f pnpm-lock.yaml ] && command -v $(PNPM) >/dev/null 2>&1; then \
-		$(PNPM) install; \
-	elif [ -f yarn.lock ] && command -v $(YARN) >/dev/null 2>&1; then \
-		$(YARN) install; \
-	else \
-		echo "No supported JS package manager lockfile found. Install Bun and use make install only."; \
+	@if ! command -v $(BUN) >/dev/null 2>&1; then \
+		echo "Bun is required for this repo. Install Bun and rerun make install."; \
 		exit 1; \
 	fi
+	$(BUN) install
 	@echo "Install complete."
 
 fmt:
@@ -71,7 +64,7 @@ test:
 test-unit:
 	@echo "Running unit test suite..."
 	@if [ -d "tests/unit" ]; then \
-		bun test tests/unit; \
+		$(BUN) test tests/unit; \
 	else \
 		echo "No unit tests yet. Placeholder target."; \
 	fi
@@ -79,7 +72,7 @@ test-unit:
 test-e2e:
 	@echo "Running E2E test suite..."
 	@if [ -d "tests/e2e" ]; then \
-		bun test tests/e2e; \
+		$(BUN) test tests/e2e; \
 	else \
 		echo "No E2E harness yet. Placeholder target."; \
 	fi
@@ -102,8 +95,8 @@ check:
 test-core:
 	@echo "Running core TS tests..."
 	@if [ -n "$(CORE_TS_TESTS)" ]; then \
-		if command -v bun >/dev/null 2>&1; then \
-			bun test $(CORE_TS_TESTS); \
+		if command -v $(BUN) >/dev/null 2>&1; then \
+			$(BUN) test $(CORE_TS_TESTS); \
 		else \
 			echo "bun not installed; skipping core TS tests."; \
 		fi; \

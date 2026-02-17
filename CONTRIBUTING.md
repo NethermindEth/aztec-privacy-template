@@ -9,6 +9,8 @@ This repo uses `make` as the single local and CI orchestration entrypoint.
 3. `make check`
 4. `make test`
 
+Use `bun install` automatically through `make install`, and `bun test` for local test execution.
+
 `make check` is the required pre-review gate and must pass before PR creation.
 
 ## Quality rules

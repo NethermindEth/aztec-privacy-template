@@ -5,10 +5,10 @@
   "description": "Aztec privacy template scaffold",
   "license": "MIT",
   "scripts": {
-    "fmt": "biome format --write .",
-    "fmt:check": "biome format --write=false .",
-    "lint": "biome lint .",
-    "test": "echo \"No root tests configured yet\""
+    "fmt": "bunx biome format --write .",
+    "fmt:check": "bunx biome format --write=false .",
+    "lint": "bunx biome lint .",
+    "test": "bun test"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
