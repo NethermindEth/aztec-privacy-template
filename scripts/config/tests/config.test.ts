@@ -32,6 +32,12 @@ default_gas_limit = 500000
 l1_portal = "0x1111111111111111111111111111111111111111"
 protocol_contract = "0x2222222222222222222222222222222222222222"
 token_address = "0x3333333333333333333333333333333333333333"
+[modules]
+enable_borrow = false
+enable_repay = false
+enable_lp = false
+enable_queue = false
+enable_yield = false
 `;
 
 const OVERRIDE = `
@@ -68,6 +74,36 @@ test('loadConfigPair applies per-protocol override precedence', () => {
   assert.equal(config.privacy.memoPrivate, true);
   assert.equal(config.runtime.escapeTimeoutBlocks, 900);
   assert.equal(config.addresses.protocolContract, '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+  assert.equal(config.modules.enableBorrow, false);
+  assert.equal(config.modules.enableRepay, false);
+  assert.equal(config.modules.enableLp, false);
+
+  rmSync(dir, { recursive: true, force: true });
+});
+
+test('loadConfigPair supports module toggles in protocol override', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'config-test-'));
+  const templatePath = join(dir, 'template.toml');
+  const protocolPath = join(dir, 'protocol.toml');
+
+  writeConfig(templatePath, TEMPLATE);
+  writeConfig(
+    protocolPath,
+    `
+[modules]
+enable_borrow = true
+enable_queue = true
+enable_yield = true
+`,
+  );
+
+  const config = loadConfigPair(templatePath, protocolPath);
+
+  assert.equal(config.modules.enableBorrow, true);
+  assert.equal(config.modules.enableRepay, false);
+  assert.equal(config.modules.enableLp, false);
+  assert.equal(config.modules.enableQueue, true);
+  assert.equal(config.modules.enableYield, true);
 
   rmSync(dir, { recursive: true, force: true });
 });
@@ -118,6 +154,13 @@ test('privacyFlagsNoir output is deterministic', () => {
   const config = {
     templateVersion: 1,
     metadata: { name: 'aave' },
+    modules: {
+      enableBorrow: false,
+      enableRepay: false,
+      enableLp: false,
+      enableQueue: false,
+      enableYield: false,
+    },
     privacy: {
       senderPrivate: false,
       recipientPrivate: true,
@@ -149,6 +192,13 @@ test('generated artifacts include stable keys and protocol constants', () => {
   const config = {
     templateVersion: 2,
     metadata: { name: 'uniswap' },
+    modules: {
+      enableBorrow: true,
+      enableRepay: false,
+      enableLp: true,
+      enableQueue: false,
+      enableYield: false,
+    },
     privacy: {
       recipientPrivate: true,
       amountPrivate: true,
@@ -170,6 +220,7 @@ test('generated artifacts include stable keys and protocol constants', () => {
 
   const flags = protocolConstantsTs(config).trim();
   const sol = portalConstantsSol(config).trim();
+  const privacyFlags = privacyFlagsNoir(config).trim();
 
   const outDir = mkdtempSync(join(tmpdir(), 'config-artifacts-'));
   const protocolFile = join(outDir, 'protocol_constants.ts');
@@ -184,6 +235,15 @@ test('generated artifacts include stable keys and protocol constants', () => {
   assert.equal(protocolText.includes("PROTOCOL_NAME = 'uniswap'"), true);
   assert.equal(protocolText.includes('L1_CHAIN_ID = 1'), true);
   assert.equal(portalText.includes('uint256 internal constant DEFAULT_GAS_LIMIT = 2000000;'), true);
+  assert.equal(privacyFlags.includes('pub const ENABLE_BORROW: bool = true;'), true);
+  assert.equal(privacyFlags.includes('pub const ENABLE_LP: bool = true;'), true);
+  assert.equal(privacyFlags.includes('pub const ENABLE_REPAY: bool = false;'), true);
+  assert.equal(protocolText.includes('export const ENABLE_BORROW = true;'), true);
+  assert.equal(protocolText.includes('export const ENABLE_LP = true;'), true);
+  assert.equal(protocolText.includes('export const ENABLE_REPAY = false;'), true);
+  assert.equal(portalText.includes('bool internal constant ENABLE_BORROW = true;'), true);
+  assert.equal(portalText.includes('bool internal constant ENABLE_LP = true;'), true);
+  assert.equal(portalText.includes('bool internal constant ENABLE_YIELD = false;'), true);
 
   rmSync(outDir, { recursive: true, force: true });
 });

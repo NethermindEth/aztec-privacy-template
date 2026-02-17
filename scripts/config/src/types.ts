@@ -18,6 +18,14 @@ export type AddressConfig = {
   tokenAddress: string;
 };
 
+export type ModuleFlags = {
+  enableBorrow: boolean;
+  enableRepay: boolean;
+  enableLp: boolean;
+  enableQueue: boolean;
+  enableYield: boolean;
+};
+
 export type TemplateMetadata = {
   name: string;
 };
@@ -28,6 +36,7 @@ export type GeneratedConfig = {
   privacy: PrivacyConfig;
   runtime: RuntimeConfig;
   addresses: AddressConfig;
+  modules: ModuleFlags;
 };
 
 export type RawConfigFile = {
@@ -51,5 +60,12 @@ export type RawConfigFile = {
     l1_portal?: string;
     protocol_contract?: string;
     token_address?: string;
+  };
+  modules?: {
+    enable_borrow?: boolean;
+    enable_repay?: boolean;
+    enable_lp?: boolean;
+    enable_queue?: boolean;
+    enable_yield?: boolean;
   };
 };

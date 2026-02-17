@@ -21,4 +21,10 @@ library PortalConstants {
   bool internal constant AMOUNT_PRIVATE = false;
   bool internal constant SENDER_PRIVATE = true;
   bool internal constant MEMO_PRIVATE = false;
+
+  bool internal constant ENABLE_BORROW = false;
+  bool internal constant ENABLE_REPAY = false;
+  bool internal constant ENABLE_LP = false;
+  bool internal constant ENABLE_QUEUE = false;
+  bool internal constant ENABLE_YIELD = false;
 }

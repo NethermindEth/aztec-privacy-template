@@ -10,3 +10,9 @@ export const DEFAULT_GAS_LIMIT = 2000000;
 export const L1_PORTAL = '0x0000000000000000000000000000000000000000';
 export const PROTOCOL_CONTRACT = '0xA0b86991c6218b36c1d19d4a2e9eb0ce3606eb48';
 export const TOKEN_ADDRESS = '0xB000000000000000000000000000000000000000';
+
+export const ENABLE_BORROW = false;
+export const ENABLE_REPAY = false;
+export const ENABLE_LP = false;
+export const ENABLE_QUEUE = false;
+export const ENABLE_YIELD = false;

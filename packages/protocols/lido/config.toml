@@ -9,3 +9,10 @@ escape_timeout_blocks = 1500
 
 [addresses]
 protocol_contract = "0xD000000000000000000000000000000000000000"
+
+[modules]
+enable_borrow = false
+enable_repay = false
+enable_lp = false
+enable_queue = false
+enable_yield = false

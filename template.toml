@@ -19,3 +19,10 @@ default_gas_limit = 2000000
 l1_portal = "0x0000000000000000000000000000000000000000"
 protocol_contract = "0x0000000000000000000000000000000000000000"
 token_address = "0x0000000000000000000000000000000000000000"
+
+[modules]
+enable_borrow = false
+enable_repay = false
+enable_lp = false
+enable_queue = false
+enable_yield = false

@@ -1,5 +1,5 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import {
   loadConfigPair,
   portalConstantsSol,
@@ -91,11 +91,16 @@ function run(args: string[]): void {
     requireArg(parsed.protocolConfig, 'protocol-config'),
   );
   const outDir = parsed.outDir ?? `packages/protocols/${protocol}/generated`;
+  const srcFlagsPath = join(outDir, '..', 'noir', 'src', 'privacy_flags.nr');
 
   const config = loadConfigPair(template, protocolConfig);
+  const flagsSource = privacyFlagsNoir(config);
 
   mkdirSync(outDir, { recursive: true });
-  writeFileSync(join(outDir, 'privacy_flags.nr'), privacyFlagsNoir(config));
+  mkdirSync(dirname(srcFlagsPath), { recursive: true });
+
+  writeFileSync(join(outDir, 'privacy_flags.nr'), flagsSource);
+  writeFileSync(srcFlagsPath, flagsSource);
   writeFileSync(join(outDir, 'protocol_constants.ts'), protocolConstantsTs(config));
   writeFileSync(join(outDir, 'PortalConstants.sol'), portalConstantsSol(config));
 
