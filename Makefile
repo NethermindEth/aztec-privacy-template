@@ -1,11 +1,10 @@
 SHELL := /usr/bin/env bash
 
-NPM := npm
 BUN := bun
 PNPM := pnpm
 YARN := yarn
-BIOME := npx biome
-SOLHINT := npx solhint
+BIOME := bunx biome
+SOLHINT := bunx solhint
 SOLIDITY_FILES := $(shell find packages tests -type f -name '*.sol' 2>/dev/null)
 
 WORKDIRS := packages/core packages/protocols/aave packages/protocols/uniswap packages/protocols/lido tests tests/e2e tests/e2e/specs docs docs/appendix scripts
@@ -37,14 +36,15 @@ help:
 
 install:
 	@echo "Installing workspace dependencies..."
-	@if [ -f bun.lockb ] && command -v $(BUN) >/dev/null 2>&1; then \
+	@if command -v $(BUN) >/dev/null 2>&1; then \
 		$(BUN) install; \
 	elif [ -f pnpm-lock.yaml ] && command -v $(PNPM) >/dev/null 2>&1; then \
 		$(PNPM) install; \
 	elif [ -f yarn.lock ] && command -v $(YARN) >/dev/null 2>&1; then \
 		$(YARN) install; \
 	else \
-		$(NPM) install; \
+		echo "No supported JS package manager lockfile found. Install Bun and use make install only."; \
+		exit 1; \
 	fi
 	@echo "Install complete."
 
@@ -71,7 +71,7 @@ test:
 test-unit:
 	@echo "Running unit test suite..."
 	@if [ -d "tests/unit" ]; then \
-		$(NPM) test -- tests/unit; \
+		bun test tests/unit; \
 	else \
 		echo "No unit tests yet. Placeholder target."; \
 	fi
@@ -79,7 +79,7 @@ test-unit:
 test-e2e:
 	@echo "Running E2E test suite..."
 	@if [ -d "tests/e2e" ]; then \
-		$(NPM) test -- tests/e2e; \
+		bun test tests/e2e; \
 	else \
 		echo "No E2E harness yet. Placeholder target."; \
 	fi
