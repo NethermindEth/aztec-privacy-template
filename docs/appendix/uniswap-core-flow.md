@@ -37,6 +37,11 @@ Phase 4 adds a second reference implementation for the template: a Uniswap priva
 - `tests/e2e/specs/uniswap.ts`
 - `tests/e2e/specs/uniswap.spec.ts`
 
+Optional module note:
+
+- `packages/protocols/uniswap/noir/src/modules/lp.nr` exists and is gated behind `modules.enable_lp`.
+- `make protocol-uniswap` generates both privacy and module constants into `packages/protocols/uniswap/generated`.
+
 ## Caveats
 
 - Slippage is represented by `minAmountOut` and validated in `executeSwap` against mocked router output.

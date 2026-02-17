@@ -29,6 +29,12 @@ These modules provide basic payload helpers for deterministic witness wiring.
   - `buildStakeMessage`
   - `buildUnstakeMessage`
 
+Optional module note:
+
+- `packages/protocols/lido/noir/src/modules/queue.nr` (optional `modules.enable_queue`)
+- `packages/protocols/lido/noir/src/modules/yield.nr` (optional `modules.enable_yield`)
+- Generated module flags are included in `packages/protocols/lido/generated/privacy_flags.nr`.
+
 ## Tests
 
 - Solidity tests: `packages/protocols/lido/solidity/test/LidoPortal.t.sol`

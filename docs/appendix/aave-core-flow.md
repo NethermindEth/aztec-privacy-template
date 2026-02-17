@@ -40,5 +40,11 @@ These modules provide deterministic payload encoding helpers for future witness 
 
 - `memo_private`
 - `escape_timeout_blocks`
+- `modules.enable_borrow` / `modules.enable_repay` (both default false; add-on only)
+
+Optional module source files are available under:
+
+- `packages/protocols/aave/noir/src/modules/borrow.nr`
+- `packages/protocols/aave/noir/src/modules/repay.nr`
 
 Build output is generated via `make protocol-aave`.

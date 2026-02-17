@@ -160,7 +160,7 @@ Exit criteria:
 - `make test-e2e` runs all protocol specs through one harness.
 - Both relayer and self-execution modes verified.
 
-## Phase 7: Optional Modules
+## Phase 7: Optional Modules **COMPLETE**
 
 Goal: expand capabilities without increasing onboarding complexity.
 
