@@ -35,6 +35,8 @@ interface IUniswapV3RouterLike {
 contract UniswapPortal is BasePortal, EscapeHatch {
     /// @notice flow id for swap actions.
     bytes32 public constant SWAP_FLOW = keccak256("UNISWAP_SWAP");
+    /// @notice fee bound expressed in hundredths of a bip.
+    uint24 public constant MAX_FEE_BPS = 1_000_000;
 
     /// @notice canonical Uniswap router used by this portal.
     address public immutable SWAP_ROUTER;
@@ -146,6 +148,9 @@ contract UniswapPortal is BasePortal, EscapeHatch {
         if (fee == 0) {
             revert InvalidFee();
         }
+        if (fee > MAX_FEE_BPS) {
+            revert InvalidFee();
+        }
 
         messageHash = _sendL1ToL2Message(content, msg.sender);
         _markRequestMetadata(
@@ -184,40 +189,21 @@ contract UniswapPortal is BasePortal, EscapeHatch {
         uint64 nonce,
         uint64 timeoutBlocks
     ) external onlyRelayer {
-        if (tokenIn == address(0) || tokenOut == address(0) || recipient == address(0)) {
-            revert InvalidAddress();
-        }
-
-        if (amountIn == 0) {
-            revert InvalidAmount();
-        }
-
-        bytes32 messageHash = _buildMessageHash(content, sender, nonce);
-        _assertFlowRequest(
-            messageHash,
-            SWAP_FLOW,
+        bytes32 messageHash = _consumeMatchedSwapRequest(
+            content,
             sender,
             tokenIn,
             tokenOut,
             amountIn,
             minAmountOut,
             fee,
-            recipient
+            recipient,
+            nonce
         );
-
-        _consumeL2ToL1Message(content, sender, nonce);
-        delete swapRequests[messageHash];
 
         bool success = _executeSwap(tokenIn, tokenOut, amountIn, minAmountOut, fee, recipient);
         if (!success) {
-            _registerEscape(messageHash, sender, tokenIn, amountIn, timeoutBlocks);
-            emit UniswapFlowEscaped(
-                messageHash,
-                SWAP_FLOW,
-                sender,
-                amountIn,
-                timeoutBlocks == 0 ? DEFAULT_ESCAPE_TIMEOUT : timeoutBlocks
-            );
+            _registerSwapEscape(messageHash, sender, tokenIn, amountIn, timeoutBlocks);
             return;
         }
 
@@ -296,6 +282,62 @@ contract UniswapPortal is BasePortal, EscapeHatch {
         ) {
             revert FlowRequestMismatch();
         }
+    }
+
+    function _consumeMatchedSwapRequest(
+        bytes32 content,
+        address sender,
+        address tokenIn,
+        address tokenOut,
+        uint256 amountIn,
+        uint256 minAmountOut,
+        uint24 fee,
+        address recipient,
+        uint64 nonce
+    ) private returns (bytes32 messageHash) {
+        if (tokenIn == address(0) || tokenOut == address(0) || recipient == address(0)) {
+            revert InvalidAddress();
+        }
+
+        if (amountIn == 0) {
+            revert InvalidAmount();
+        }
+
+        if (fee == 0 || fee > MAX_FEE_BPS) {
+            revert InvalidFee();
+        }
+
+        messageHash = _buildMessageHash(content, sender, nonce);
+        _assertFlowRequest(
+            messageHash,
+            SWAP_FLOW,
+            sender,
+            tokenIn,
+            tokenOut,
+            amountIn,
+            minAmountOut,
+            fee,
+            recipient
+        );
+        _consumeL2ToL1Message(content, sender, nonce);
+        delete swapRequests[messageHash];
+    }
+
+    function _registerSwapEscape(
+        bytes32 messageHash,
+        address sender,
+        address tokenIn,
+        uint256 amountIn,
+        uint64 timeoutBlocks
+    ) private {
+        _registerEscape(messageHash, sender, tokenIn, amountIn, timeoutBlocks);
+        emit UniswapFlowEscaped(
+            messageHash,
+            SWAP_FLOW,
+            sender,
+            amountIn,
+            timeoutBlocks == 0 ? DEFAULT_ESCAPE_TIMEOUT : timeoutBlocks
+        );
     }
 
     function _executeSwap(

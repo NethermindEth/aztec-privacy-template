@@ -40,6 +40,8 @@ Phase 4 adds a second reference implementation for the template: a Uniswap priva
 ## Caveats
 
 - Slippage is represented by `minAmountOut` and validated in `executeSwap` against mocked router output.
+- `fee`/`feeBps` must be in `(0, 1_000_000]`.
+- `amountIn` and `minAmountOut` are validated independently; they are not compared directly because token units differ per pair.
 - Swap execution constraints are intentionally simplified:
   - Single-hop behavior via `exactInputSingle`-style arguments.
   - No on-chain liquidity path simulation.

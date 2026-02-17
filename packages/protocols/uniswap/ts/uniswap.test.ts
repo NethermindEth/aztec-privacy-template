@@ -38,14 +38,6 @@ test('validates invalid swap amounts', () => {
       feeBps: 3000,
     });
   }, /Invalid amount/);
-
-  assert.throws(() => {
-    client.buildSwapPayload({
-      amountIn: '1000',
-      minAmountOut: '2000',
-      feeBps: 3000,
-    });
-  }, /Invalid amount/);
 });
 
 test('validates invalid swap fee', () => {
@@ -57,6 +49,26 @@ test('validates invalid swap fee', () => {
       feeBps: 0,
     });
   }, /Invalid fee/);
+
+  assert.throws(() => {
+    client.buildSwapPayload({
+      amountIn: 1000,
+      minAmountOut: 900,
+      feeBps: 1_000_001,
+    });
+  }, /Invalid fee/);
+});
+
+test('allows output minimum greater than input amount across token pairs', () => {
+  const client = new UniswapProtocolClient();
+  const payload = client.buildSwapPayload({
+    amountIn: '1000',
+    minAmountOut: '2000',
+    feeBps: 3000,
+  });
+
+  assert.equal(payload.amountIn, '1000');
+  assert.equal(payload.minAmountOut, '2000');
 });
 
 test('normalizes numeric amounts to canonical decimal string', () => {

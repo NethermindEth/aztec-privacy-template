@@ -70,6 +70,22 @@ contract UniswapPortalTest is Test {
         portal.executeSwap(content, user, tokenIn, tokenOut, 1 ether, 900, 3000, user, 1, 0);
     }
 
+    /// @notice rejects invalid fee configuration at request and execute time.
+    function testRejectsFeeAboveBound() public {
+        bytes32 content = keccak256(abi.encodePacked("swap-fee-bound", user));
+
+        vm.prank(user);
+        vm.expectRevert(UniswapPortal.InvalidFee.selector);
+        portal.requestSwap(content, tokenIn, tokenOut, 1 ether, 900, 1_000_001, user);
+
+        vm.prank(user);
+        portal.requestSwap(content, tokenIn, tokenOut, 1 ether, 900, 3000, user);
+
+        vm.prank(relayer);
+        vm.expectRevert(UniswapPortal.InvalidFee.selector);
+        portal.executeSwap(content, user, tokenIn, tokenOut, 1 ether, 900, 1_000_001, user, 1, 0);
+    }
+
     /// @notice rejects execution parameters that do not match the request.
     function testExecuteRevertsOnRequestMismatch() public {
         vm.prank(user);

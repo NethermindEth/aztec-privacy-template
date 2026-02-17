@@ -91,10 +91,6 @@ export class UniswapProtocolClient {
     const amountIn = normalizeAmount(input.amountIn);
     const minAmountOut = normalizeAmount(input.minAmountOut);
 
-    if (BigInt(minAmountOut) > BigInt(amountIn)) {
-      throw new Error('Invalid amount');
-    }
-
     const feeBps = ensureFee(input.feeBps);
 
     return {
