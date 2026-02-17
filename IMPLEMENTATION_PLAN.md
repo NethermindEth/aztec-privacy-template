@@ -117,7 +117,7 @@ Exit criteria:
 
 - Aave core path passes unit, integration, and E2E in harness.
 
-## Phase 4: Uniswap Core Flow (Reference 2)
+## Phase 4: Uniswap Core Flow (Reference 2) **COMPLETE**
 
 Goal: validate architecture on DEX behavior (swap only).
 
