@@ -11,6 +11,8 @@ import {
   compileAztecContract,
   deployL1,
   ensureAztecLocalNetwork,
+  logStep,
+  logValue,
   provisionPrivateTokenBalance,
   stopProcess,
 } from './runtime';
@@ -21,24 +23,36 @@ const UNISWAP_SOLIDITY_DIR = 'packages/protocols/uniswap/solidity';
 const UNISWAP_MOCKS_SOLIDITY_DIR = 'tests/mocks/uniswap/solidity';
 const TOKEN_IN = '0x000000000000000000000000000000000000ABCD';
 const TOKEN_OUT = '0x000000000000000000000000000000000000BEEF';
+const TEST_TAG = 'UNISWAP';
 
 test(
   'Uniswap E2E: Aztec private state + L1 Uniswap portal flow',
   { timeout: 900_000 },
   async () => {
+    logStep(TEST_TAG, 0, 'Start local Aztec + L1 runtime');
     const runtime = await ensureAztecLocalNetwork();
 
     try {
+      logStep(TEST_TAG, 1, 'Compile Aztec adapter');
       compileAztecContract(UNISWAP_AZTEC_DIR);
+
+      logStep(TEST_TAG, 2, 'Provision private Aztec token balance');
       const aztecState = await provisionPrivateTokenBalance('Uniswap Privacy Token', 'UPT', 5_000n);
+      logValue(TEST_TAG, 'Aztec owner', aztecState.ownerAddress);
+      logValue(TEST_TAG, 'Aztec private balance', aztecState.balance);
+
+      logStep(TEST_TAG, 3, 'Build request content hash');
       const content = castKeccak(
         `uniswap-swap:${aztecState.ownerAddress}:${aztecState.balance.toString()}`,
       );
+      logValue(TEST_TAG, 'Request content hash', content);
 
+      logStep(TEST_TAG, 4, 'Deploy router mock + portal');
       const routerAddress = deployL1(
         'tests/mocks/uniswap/solidity/MockUniswapV3Router.sol:MockUniswapV3Router',
         UNISWAP_MOCKS_SOLIDITY_DIR,
       );
+      logValue(TEST_TAG, 'MockUniswapV3Router', routerAddress);
       castSend(USER_PRIVATE_KEY, routerAddress, 'setSimulatedAmountOut(uint256)', ['1200']);
 
       const portalAddress = deployL1(
@@ -46,7 +60,9 @@ test(
         UNISWAP_SOLIDITY_DIR,
         [PROTOCOL_ID, USER_ADDRESS, RELAYER_ADDRESS, routerAddress],
       );
+      logValue(TEST_TAG, 'UniswapPortal', portalAddress);
 
+      logStep(TEST_TAG, 5, 'Submit user swap request');
       castSend(
         USER_PRIVATE_KEY,
         portalAddress,
@@ -59,7 +75,9 @@ test(
         'messageHashFor(bytes32,address,uint64)(bytes32)',
         [content, USER_ADDRESS, '1'],
       );
+      logValue(TEST_TAG, 'Request hash', requestHash);
 
+      logStep(TEST_TAG, 6, 'Execute relayer swap on L1');
       castSend(
         RELAYER_PRIVATE_KEY,
         portalAddress,
@@ -78,6 +96,7 @@ test(
         ],
       );
 
+      logStep(TEST_TAG, 7, 'Assert consumed message + router side effects');
       const consumed = castCall(portalAddress, 'hasMessageBeenConsumed(bytes32)(bool)', [
         requestHash,
       ]);
