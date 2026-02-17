@@ -139,7 +139,7 @@ test-core:
 	@echo "Running core Noir tests (placeholder)..."
 	@if [ -n "$(CORE_NOIR_TESTS)" ]; then \
 		if command -v nargo >/dev/null 2>&1; then \
-			$(MAKE) -C packages/core/noir test || true; \
+			$(MAKE) -C packages/core/noir test; \
 		else \
 			echo "nargo not installed; run manually when toolchain is available."; \
 		fi; \

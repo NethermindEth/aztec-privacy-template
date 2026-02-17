@@ -63,6 +63,14 @@ function normalize(name: string, value: string): string {
   return value.trim();
 }
 
+function normalizeProtocol(value: string): string {
+  const normalized = value.trim();
+  if (!/^[a-z0-9-]+$/.test(normalized)) {
+    throw new Error('Invalid --protocol value; expected lowercase letters, numbers, and dashes');
+  }
+  return normalized;
+}
+
 function run(args: string[]): void {
   const parsed = parseArgs(args);
   if (
@@ -75,7 +83,9 @@ function run(args: string[]): void {
   }
 
   const template = normalize('template', requireArg(parsed.template, 'template'));
-  const protocol = normalize('protocol', requireArg(parsed.protocol, 'protocol'));
+  const protocol = normalizeProtocol(
+    normalize('protocol', requireArg(parsed.protocol, 'protocol')),
+  );
   const protocolConfig = normalize(
     'protocol-config',
     requireArg(parsed.protocolConfig, 'protocol-config'),
@@ -83,17 +93,11 @@ function run(args: string[]): void {
   const outDir = parsed.outDir ?? `packages/protocols/${protocol}/generated`;
 
   const config = loadConfigPair(template, protocolConfig);
-  const configWithProtocol = {
-    ...config,
-    metadata: {
-      name: protocol,
-    },
-  };
 
   mkdirSync(outDir, { recursive: true });
-  writeFileSync(join(outDir, 'privacy_flags.nr'), privacyFlagsNoir(configWithProtocol));
-  writeFileSync(join(outDir, 'protocol_constants.ts'), protocolConstantsTs(configWithProtocol));
-  writeFileSync(join(outDir, 'PortalConstants.sol'), portalConstantsSol(configWithProtocol));
+  writeFileSync(join(outDir, 'privacy_flags.nr'), privacyFlagsNoir(config));
+  writeFileSync(join(outDir, 'protocol_constants.ts'), protocolConstantsTs(config));
+  writeFileSync(join(outDir, 'PortalConstants.sol'), portalConstantsSol(config));
 
   console.log(`Generated protocol artifacts in ${outDir}`);
 }

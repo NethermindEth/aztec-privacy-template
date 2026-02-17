@@ -6,7 +6,7 @@
   "license": "MIT",
   "scripts": {
     "fmt": "bunx biome format --config-path .biome.json --write .",
-    "fmt:check": "bunx biome format --config-path .biome.json --write=false .",
+    "fmt:check": "bunx biome format --config-path .biome.json .",
     "lint": "bunx biome lint --config-path .biome.json .",
     "test": "bun test"
   },
