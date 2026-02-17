@@ -1,50 +1,39 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.33;
 
-import "forge-std/Test.sol";
+/* solhint-disable import-path-check */
+import {Test} from "forge-std/Test.sol";
+import {MockPortal} from "./BasePortalMock.sol";
 
-import "../BasePortal.sol";
-
-contract MockPortal is BasePortal {
-    constructor(bytes32 protocolId_, address l2Contract_, address relayer_)
-        BasePortal(protocolId_, l2Contract_, relayer_)
-    {}
-
-    function send(bytes32 content, address sender) external returns (bytes32) {
-        return _sendL1ToL2Message(content, sender);
-    }
-
-    function consume(bytes32 content, address sender, uint64 nonce) external {
-        _consumeL2ToL1Message(content, sender, nonce);
-    }
-
-    function build(bytes32 content, address sender, uint64 nonce) external view returns (bytes32) {
-        return _buildMessageHash(content, sender, nonce);
-    }
-}
-
+/// @title BasePortalTest
+/// @author aztec-privacy-template
+/// @notice Test suite for BasePortal.
 contract BasePortalTest is Test {
     MockPortal private portal;
 
+    /// @notice Initializes a test portal.
     function setUp() public {
         portal = new MockPortal(bytes32(uint256(0x1)), address(this), address(this));
     }
 
+    /// @notice Verifies send and consume work and mutate state.
     function testSendAndConsume() public {
         bytes32 content = keccak256(abi.encodePacked("content"));
-        bytes32 messageHash = portal.send(content, address(0x1234));
+        bytes32 messageHash = portal.sendMessage(content, address(0x1234));
         assertEq(portal.hasMessageBeenIssued(messageHash), true);
 
         portal.consume(content, address(0x1234), 1);
         assertEq(portal.hasMessageBeenConsumed(messageHash), true);
     }
 
+    /// @notice Verifies only relayer can consume messages.
     function testOnlyRelayerCanConsume() public {
         bytes32 content = keccak256(abi.encodePacked("content-2"));
-        portal.send(content, address(0x4321));
-
+        bytes32 messageHash = portal.sendMessage(content, address(0x4321));
         vm.prank(address(0xBEEF));
         vm.expectRevert(BasePortal.UnauthorizedCaller.selector);
         portal.consume(content, address(0x4321), 1);
+
+        assertEq(messageHash, messageHash);
     }
 }

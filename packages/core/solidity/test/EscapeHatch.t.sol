@@ -1,29 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.33;
 
-import "forge-std/Test.sol";
+/* solhint-disable import-path-check */
+import {Test} from "forge-std/Test.sol";
+import {MockEscape} from "./EscapeHatchMock.sol";
 
-import "../EscapeHatch.sol";
-
-contract MockEscape is EscapeHatch {
-    function register(bytes32 messageHash, address depositor, address token, uint256 amount, uint64 timeoutBlocks)
-        external
-    {
-        _registerEscape(messageHash, depositor, token, amount, timeoutBlocks);
-    }
-
-    function cancel(bytes32 messageHash) external {
-        _cancelEscape(messageHash);
-    }
-}
-
+/// @title EscapeHatchTest
+/// @author aztec-privacy-template
+/// @notice Tests for EscapeHatch behavior.
 contract EscapeHatchTest is Test {
     MockEscape private target;
 
+    /// @notice Initializes the test subject.
     function setUp() public {
         target = new MockEscape();
     }
 
+    /// @notice Registers and then cancels a request.
     function testRegisterThenCancel() public {
         bytes32 key = keccak256(abi.encodePacked("escape"));
         target.register(key, address(0x1234), address(0), 1 ether, 10);
@@ -35,6 +28,7 @@ contract EscapeHatchTest is Test {
         assertEq(request.depositor, address(0));
     }
 
+    /// @notice Prevents duplicate request registration.
     function testCannotOverwriteEscapeRequest() public {
         bytes32 key = keccak256(abi.encodePacked("escape-dup"));
         target.register(key, address(0x1234), address(0), 1 ether, 10);
