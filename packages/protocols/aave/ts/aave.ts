@@ -31,29 +31,32 @@ export type AaveFlowInput = {
 };
 
 function normalizeAmount(value: AaveAmount): string {
+  let normalized: bigint;
+
   if (typeof value === 'number') {
-    if (!Number.isSafeInteger(value) || value < 0) {
+    if (!Number.isSafeInteger(value)) {
       throw new Error('Invalid amount');
     }
-    return value.toString();
-  }
-
-  if (typeof value === 'bigint') {
-    if (value < 0) {
+    normalized = BigInt(value);
+  } else if (typeof value === 'bigint') {
+    normalized = value;
+  } else {
+    const parsed = value.trim();
+    if (!/^\d+$/.test(parsed)) {
       throw new Error('Invalid amount');
     }
-    return value.toString();
+    normalized = BigInt(parsed);
   }
 
-  const parsed = value.trim();
-  if (!/^\d+$/.test(parsed)) {
+  if (normalized <= 0n) {
     throw new Error('Invalid amount');
   }
-  return parsed;
+
+  return normalized.toString();
 }
 
 function ensureAddress(address: string): string {
-  const normalized = address.toLowerCase();
+  const normalized = address.trim().toLowerCase();
   if (!/^0x[0-9a-f]{40}$/.test(normalized)) {
     throw new Error('Invalid address');
   }

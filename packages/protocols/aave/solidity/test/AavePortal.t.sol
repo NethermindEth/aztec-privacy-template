@@ -33,6 +33,7 @@ contract AavePortalTest is Test {
     /// @notice validates that a deposit request can execute successfully.
     function testDepositFlowCompletes() public {
         bytes32 content = keccak256(abi.encodePacked("deposit", user));
+        vm.prank(user);
         bytes32 requestHash = portal.requestDeposit(content, 1 ether, 0);
         assertEq(portal.hasMessageBeenIssued(requestHash), true);
 
@@ -48,6 +49,7 @@ contract AavePortalTest is Test {
     /// @notice validates that a withdraw request can execute successfully.
     function testWithdrawFlowCompletes() public {
         bytes32 content = keccak256(abi.encodePacked("withdraw", user));
+        vm.prank(user);
         bytes32 requestHash = portal.requestWithdraw(content, 2 ether);
         assertEq(portal.hasMessageBeenIssued(requestHash), true);
 
@@ -62,16 +64,29 @@ contract AavePortalTest is Test {
     /// @notice enforces relayer-only execution for execution entrypoint.
     function testOnlyRelayerCanExecute() public {
         bytes32 content = keccak256(abi.encodePacked("deposit", user));
+        vm.prank(user);
         portal.requestDeposit(content, 1 ether, 0);
 
         vm.expectRevert(AavePortal.UnauthorizedCaller.selector);
         portal.executeDeposit(content, user, 1 ether, 0, 1, 0);
     }
 
+    /// @notice prevents relayer tampering with amount in execute payload.
+    function testExecuteRevertsOnRequestAmountMismatch() public {
+        bytes32 content = keccak256(abi.encodePacked("deposit-mismatch", user));
+        vm.prank(user);
+        portal.requestDeposit(content, 1 ether, 0);
+
+        vm.prank(relayer);
+        vm.expectRevert(AavePortal.FlowRequestMismatch.selector);
+        portal.executeDeposit(content, user, 2 ether, 0, 1, 0);
+    }
+
     /// @notice falls back to escape hatch when Aave deposit fails.
     function testDepositEscapesWhenPoolFails() public {
         pool.setShouldFail(true);
         bytes32 content = keccak256(abi.encodePacked("deposit-fail", user));
+        vm.prank(user);
         bytes32 requestHash = portal.requestDeposit(content, 1 ether, 0);
         vm.prank(relayer);
         portal.executeDeposit(content, user, 1 ether, 0, 1, 42);
@@ -90,6 +105,7 @@ contract AavePortalTest is Test {
     function testWithdrawEscapesWhenPoolFails() public {
         pool.setShouldFail(true);
         bytes32 content = keccak256(abi.encodePacked("withdraw-fail", user));
+        vm.prank(user);
         bytes32 requestHash = portal.requestWithdraw(content, 3 ether);
         vm.prank(relayer);
         portal.executeWithdraw(content, user, 3 ether, 1, 24);

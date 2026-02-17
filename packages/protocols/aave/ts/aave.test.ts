@@ -23,6 +23,11 @@ test('validates invalid deposit amount', () => {
       amount: '-1' as never,
     });
   }, /Invalid amount/);
+  assert.throws(() => {
+    client.buildDepositPayload({
+      amount: 0,
+    });
+  }, /Invalid amount/);
 });
 
 test('builds and verifies deposit message', () => {
@@ -49,4 +54,13 @@ test('builds valid withdraw payload and message', () => {
   assert.equal(payload.token, '0xb000000000000000000000000000000000000000');
   assert.equal(payload.amount, '456');
   assert.equal(verifyPrivateMessage(encoded, client.protocolName, AAVE_WITHDRAW_ACTION), true);
+});
+
+test('normalizes string amounts to canonical decimal', () => {
+  const client = new AaveProtocolClient();
+  const payload = client.buildDepositPayload({
+    amount: '00042',
+  });
+
+  assert.equal(payload.amount, '42');
 });

@@ -37,6 +37,15 @@ contract AavePortal is BasePortal, EscapeHatch {
     address public immutable AAVE_POOL;
     /// @notice asset accepted by this simplified Aave flow.
     address public immutable ASSET;
+    /// @notice per-request metadata used to bind execute payloads to request payloads.
+    mapping(bytes32 => FlowRequest) private flowRequests;
+
+    struct FlowRequest {
+        bytes32 action;
+        address actor;
+        bool exists;
+        uint256 amount;
+    }
 
     /// @notice emitted when a private action request is placed.
     /// @param messageHash Hash for the L1-to-L2 request.
@@ -79,6 +88,8 @@ contract AavePortal is BasePortal, EscapeHatch {
     error InvalidAmount();
     error InvalidAddress();
     error InvalidReferralCode();
+    error FlowRequestNotFound();
+    error FlowRequestMismatch();
 
     /// @notice Initializes Aave portal dependencies.
     /// @param protocolId_ Protocol identifier used for message hashing.
@@ -119,10 +130,11 @@ contract AavePortal is BasePortal, EscapeHatch {
             revert InvalidAmount();
         }
 
-        messageHash = _sendL1ToL2Message(content, msg.sender);
         if (referralCode > 10000) {
             revert InvalidReferralCode();
         }
+
+        messageHash = _sendL1ToL2Message(content, msg.sender);
         _markRequestMetadata(messageHash, DEPOSIT_FLOW, msg.sender, amount);
     }
 
@@ -154,9 +166,6 @@ contract AavePortal is BasePortal, EscapeHatch {
         uint64 nonce,
         uint64 timeoutBlocks
     ) external onlyRelayer {
-        _consumeL2ToL1Message(content, sender, nonce);
-        bytes32 messageHash = _buildMessageHash(content, sender, nonce);
-
         if (amount == 0) {
             revert InvalidAmount();
         }
@@ -164,6 +173,15 @@ contract AavePortal is BasePortal, EscapeHatch {
         if (sender == address(0)) {
             revert InvalidAddress();
         }
+
+        if (referralCode > 10000) {
+            revert InvalidReferralCode();
+        }
+
+        bytes32 messageHash = _buildMessageHash(content, sender, nonce);
+        _assertFlowRequest(messageHash, DEPOSIT_FLOW, sender, amount);
+        _consumeL2ToL1Message(content, sender, nonce);
+        delete flowRequests[messageHash];
 
         bool success = _executeDeposit(sender, amount, referralCode);
         if (!success) {
@@ -195,9 +213,6 @@ contract AavePortal is BasePortal, EscapeHatch {
         uint64 nonce,
         uint64 timeoutBlocks
     ) external onlyRelayer {
-        _consumeL2ToL1Message(content, sender, nonce);
-        bytes32 messageHash = _buildMessageHash(content, sender, nonce);
-
         if (amount == 0) {
             revert InvalidAmount();
         }
@@ -205,6 +220,11 @@ contract AavePortal is BasePortal, EscapeHatch {
         if (sender == address(0)) {
             revert InvalidAddress();
         }
+
+        bytes32 messageHash = _buildMessageHash(content, sender, nonce);
+        _assertFlowRequest(messageHash, WITHDRAW_FLOW, sender, amount);
+        _consumeL2ToL1Message(content, sender, nonce);
+        delete flowRequests[messageHash];
 
         bool success = _executeWithdraw(sender, amount);
         if (!success) {
@@ -250,7 +270,30 @@ contract AavePortal is BasePortal, EscapeHatch {
             revert InvalidAddress();
         }
 
+        flowRequests[messageHash] = FlowRequest({
+            action: action,
+            actor: actor,
+            amount: amount,
+            exists: true
+        });
+
         emit AaveFlowRequested(messageHash, action, actor, amount);
+    }
+
+    function _assertFlowRequest(
+        bytes32 messageHash,
+        bytes32 action,
+        address actor,
+        uint256 amount
+    ) private view {
+        FlowRequest memory request = flowRequests[messageHash];
+        if (!request.exists) {
+            revert FlowRequestNotFound();
+        }
+
+        if (request.action != action || request.actor != actor || request.amount != amount) {
+            revert FlowRequestMismatch();
+        }
     }
 
     function _executeDeposit(
