@@ -1,19 +1,6 @@
-import { createHash } from 'node:crypto';
-
+import type { ProtocolLifecycle } from '../harness';
 import { AaveProtocolClient } from '../../../packages/protocols/aave/ts/aave';
-
-export type ProtocolLifecycle = {
-  protocol: 'aave';
-  deploy(): Promise<{ protocolAddress: string }>;
-  shield(value: string): Promise<{ messageHash: string }>;
-  act(action: 'deposit' | 'withdraw', amount: string): Promise<{ contentHash: string }>;
-  unshield(amount: string): Promise<{ messageHash: string }>;
-  assert(): Promise<boolean>;
-};
-
-async function fakeTxHash(seed: string): Promise<string> {
-  return `0x${createHash('sha256').update(seed).digest('hex').slice(0, 40)}`;
-}
+import { createHash } from 'node:crypto';
 
 export const aaveSpec: ProtocolLifecycle = {
   protocol: 'aave',
@@ -44,7 +31,7 @@ export const aaveSpec: ProtocolLifecycle = {
     return { messageHash: message.contentHash };
   },
   async assert() {
-    const result = await fakeTxHash('aave-spec-assert');
-    return result.startsWith('0x');
+    const result = createHash('sha256').update('aave-spec-assert').digest('hex');
+    return `0x${result}`.startsWith('0x');
   },
 };

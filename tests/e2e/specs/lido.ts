@@ -1,21 +1,8 @@
+import type { ProtocolLifecycle } from '../harness';
+import { LidoProtocolClient } from '../../../packages/protocols/lido/ts/lido';
 import { createHash } from 'node:crypto';
 
-import { LidoProtocolClient } from '../../../packages/protocols/lido/ts/lido';
-
 const STAKE_RECIPIENT = '0xB000000000000000000000000000000000000001';
-
-export type ProtocolLifecycle = {
-  protocol: 'lido';
-  deploy(): Promise<{ protocolAddress: string }>;
-  shield(value: string): Promise<{ messageHash: string }>;
-  act(action: 'stake' | 'unstake', amount: string): Promise<{ contentHash: string }>;
-  unshield(amount: string): Promise<{ messageHash: string }>;
-  assert(): Promise<boolean>;
-};
-
-async function fakeTxHash(seed: string): Promise<string> {
-  return `0x${createHash('sha256').update(seed).digest('hex').slice(0, 40)}`;
-}
 
 export const lidoSpec: ProtocolLifecycle = {
   protocol: 'lido',
@@ -57,7 +44,7 @@ export const lidoSpec: ProtocolLifecycle = {
     return { messageHash: message.contentHash };
   },
   async assert() {
-    const result = await fakeTxHash('lido-spec-assert');
-    return result.startsWith('0x');
+    const result = createHash('sha256').update('lido-spec-assert').digest('hex');
+    return `0x${result}`.startsWith('0x');
   },
 };

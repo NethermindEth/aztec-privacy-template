@@ -1,19 +1,6 @@
-import { createHash } from 'node:crypto';
-
+import type { ProtocolLifecycle } from '../harness';
 import { UniswapProtocolClient } from '../../../packages/protocols/uniswap/ts/uniswap';
-
-export type ProtocolLifecycle = {
-  protocol: 'uniswap';
-  deploy(): Promise<{ protocolAddress: string }>;
-  shield(value: string): Promise<{ messageHash: string }>;
-  act(action: 'swap', amount: string): Promise<{ contentHash: string }>;
-  unshield(amount: string): Promise<{ messageHash: string }>;
-  assert(): Promise<boolean>;
-};
-
-async function fakeTxHash(seed: string): Promise<string> {
-  return `0x${createHash('sha256').update(seed).digest('hex').slice(0, 40)}`;
-}
+import { createHash } from 'node:crypto';
 
 export const uniswapSpec: ProtocolLifecycle = {
   protocol: 'uniswap',
@@ -52,7 +39,7 @@ export const uniswapSpec: ProtocolLifecycle = {
     return { messageHash: message.contentHash };
   },
   async assert() {
-    const result = await fakeTxHash('uniswap-spec-assert');
-    return result.startsWith('0x');
+    const result = createHash('sha256').update('uniswap-spec-assert').digest('hex');
+    return `0x${result}`.startsWith('0x');
   },
 };
