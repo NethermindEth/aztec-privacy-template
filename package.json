@@ -1,0 +1,17 @@
+{
+  "name": "aztec-protocol-privacy-template",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Aztec privacy template scaffold",
+  "license": "MIT",
+  "scripts": {
+    "fmt": "biome format .",
+    "fmt:check": "biome format --write=false .",
+    "lint": "biome lint .",
+    "test": "echo \"No root tests configured yet\""
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "solhint": "^4.5.4"
+  }
+}
