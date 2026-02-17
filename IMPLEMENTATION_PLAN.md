@@ -38,7 +38,7 @@ Recommended expansion targets:
 - `make protocol-uniswap`
 - `make protocol-lido`
 
-## Phase 0: Foundation and Guardrails
+## Phase 0: Foundation and Guardrails **COMPLETE**
 
 Goal: establish enforceable quality and repeatable execution.
 
@@ -60,6 +60,8 @@ Exit criteria:
 ## Phase 1: Core Infrastructure
 
 Goal: deliver reusable building blocks all protocols depend on.
+
+Solidity v0.8.33
 
 1. Implement `packages/core/solidity/BasePortal.sol`.
 2. Implement `packages/core/solidity/EscapeHatch.sol`.
