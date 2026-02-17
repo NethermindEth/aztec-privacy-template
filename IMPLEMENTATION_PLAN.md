@@ -131,7 +131,7 @@ Exit criteria:
 
 - Uniswap core path fully green without changing core abstractions.
 
-## Phase 5: Lido Core Flow (Reference 3)
+## Phase 5: Lido Core Flow (Reference 3) **COMPLETE**
 
 Goal: validate architecture on staking/yield domain (stake/unstake only).
 
