@@ -15,7 +15,7 @@ Improve `tests/` so they are:
 3. Failure paths (`EscapeHatch`, replay, unauthorized relayer) are not covered.
 4. Test output is hard to follow from user-facing CI logs.
 
-## Phase 0: Baseline observability
+## Phase 0: Baseline observability **COMPLETED**
 
 ### Changes
 
@@ -32,7 +32,7 @@ Improve `tests/` so they are:
 
 1. Console output clearly shows lifecycle: compile -> deploy -> request -> execute -> assertions.
 
-## Phase 1: Deterministic structure and reusable flow helpers
+## Phase 1: Deterministic structure and reusable flow helpers **COMPLETED**
 
 ### Changes
 
@@ -49,7 +49,7 @@ Improve `tests/` so they are:
 
 1. No duplicated deploy/request/execute boilerplate in protocol tests.
 
-## Phase 2: L1 portal negative-path coverage
+## Phase 2: L1 portal negative-path coverage **COMPLETED**
 
 ### Changes
 
@@ -67,7 +67,7 @@ Improve `tests/` so they are:
 
 1. Each protocol has at least one failing-path assertion for auth, validation, and replay protection.
 
-## Phase 3: Escape hatch coverage
+## Phase 3: Escape hatch coverage **COMPLETED**
 
 ### Changes
 
