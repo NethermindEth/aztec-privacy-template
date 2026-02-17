@@ -18,10 +18,11 @@ import {
 const PROTOCOL_ID = `0x${'33'.repeat(32)}`;
 const LIDO_AZTEC_DIR = 'packages/protocols/lido/aztec';
 const LIDO_SOLIDITY_DIR = 'packages/protocols/lido/solidity';
+const LIDO_MOCKS_SOLIDITY_DIR = 'tests/mocks/lido/solidity';
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 const ONE_ETH_WEI = '1000000000000000000';
 
-test('real Lido E2E: Aztec private state + L1 Lido portal flow', { timeout: 900_000 }, async () => {
+test('Lido E2E: Aztec private state + L1 Lido portal flow', { timeout: 900_000 }, async () => {
   const runtime = await ensureAztecLocalNetwork();
 
   try {
@@ -32,8 +33,8 @@ test('real Lido E2E: Aztec private state + L1 Lido portal flow', { timeout: 900_
     );
 
     const protocolAddress = deployL1(
-      'packages/protocols/lido/solidity/MockLidoProtocol.sol:MockLidoProtocol',
-      LIDO_SOLIDITY_DIR,
+      'tests/mocks/lido/solidity/MockLidoProtocol.sol:MockLidoProtocol',
+      LIDO_MOCKS_SOLIDITY_DIR,
     );
     const portalAddress = deployL1(
       'packages/protocols/lido/solidity/LidoPortal.sol:LidoPortal',

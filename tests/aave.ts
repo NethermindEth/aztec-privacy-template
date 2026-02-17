@@ -18,8 +18,9 @@ import {
 const PROTOCOL_ID = `0x${'11'.repeat(32)}`;
 const AAVE_AZTEC_DIR = 'packages/protocols/aave/aztec';
 const AAVE_SOLIDITY_DIR = 'packages/protocols/aave/solidity';
+const AAVE_MOCKS_SOLIDITY_DIR = 'tests/mocks/aave/solidity';
 
-test('real Aave E2E: Aztec private token + L1 Aave portal flow', { timeout: 900_000 }, async () => {
+test('Aave E2E: Aztec private token + L1 Aave portal flow', { timeout: 900_000 }, async () => {
   const runtime = await ensureAztecLocalNetwork();
 
   try {
@@ -30,12 +31,12 @@ test('real Aave E2E: Aztec private token + L1 Aave portal flow', { timeout: 900_
     );
 
     const mockTokenAddress = deployL1(
-      'packages/protocols/aave/solidity/MockERC20.sol:MockERC20',
-      AAVE_SOLIDITY_DIR,
+      'tests/mocks/aave/solidity/MockERC20.sol:MockERC20',
+      AAVE_MOCKS_SOLIDITY_DIR,
     );
     const mockPoolAddress = deployL1(
-      'packages/protocols/aave/solidity/MockAavePool.sol:MockAavePool',
-      AAVE_SOLIDITY_DIR,
+      'tests/mocks/aave/solidity/MockAavePool.sol:MockAavePool',
+      AAVE_MOCKS_SOLIDITY_DIR,
     );
     const portalAddress = deployL1(
       'packages/protocols/aave/solidity/AavePortal.sol:AavePortal',

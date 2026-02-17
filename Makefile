@@ -26,7 +26,7 @@ help:
 	@printf "  make test-unit       Run fast unit tests\n"
 	@printf "  make test-core       Run core unit tests\n"
 	@printf "  make lint-core       Run core linters\n"
-	@printf "  make test-e2e        Run real E2E (Aztec + L1) for all protocols\n"
+	@printf "  make test-e2e        Run E2E (Aztec + L1) for all protocols\n"
 	@printf "  make build           Build protocol artifacts\n"
 	@printf "  make clean           Clean build artifacts\n"
 	@printf "  make check           Run fmt-check + lint + test-unit\n"
@@ -88,7 +88,7 @@ test-unit:
 	fi
 
 test-e2e:
-	@echo "Running real E2E test suite..."
+	@echo "Running E2E test suite..."
 	@if [ ! -d "node_modules/@aztec" ]; then \
 		echo "Aztec SDK dependencies are missing; installing workspace dependencies first..."; \
 		$(BUN) install; \
@@ -97,7 +97,7 @@ test-e2e:
 		echo "tsx is missing; installing workspace dependencies first..."; \
 		$(BUN) install; \
 	fi
-	@node --import tsx --test --test-concurrency=1 --test-reporter=spec tests/e2e/real/*.real.spec.ts
+	@node --import tsx --test --test-concurrency=1 --test-reporter=spec tests/aave.ts tests/lido.ts tests/uniswap.ts
 
 build:
 	@echo "Building artifacts for all protocols..."

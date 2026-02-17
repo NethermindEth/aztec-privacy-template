@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.33;
 
-import {IUniswapV3RouterLike} from "./UniswapPortal.sol";
+import {IUniswapV3RouterLike} from "../../../../packages/protocols/uniswap/solidity/UniswapPortal.sol";
 
 /* solhint-disable gas-custom-errors */
 /// @title MockUniswapV3Router

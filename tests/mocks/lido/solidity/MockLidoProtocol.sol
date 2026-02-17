@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.33;
 
-import {ILidoLike} from "./LidoPortal.sol";
+import {ILidoLike} from "../../../../packages/protocols/lido/solidity/LidoPortal.sol";
 
 /// @title MockLidoProtocol
 /// @author aztec-privacy-template

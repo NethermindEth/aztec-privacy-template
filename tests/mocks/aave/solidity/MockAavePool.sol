@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.33;
 
-import {IAaveV3PoolLike} from "./AavePortal.sol";
+import {IAaveV3PoolLike} from "../../../../packages/protocols/aave/solidity/AavePortal.sol";
 
 /* solhint-disable gas-custom-errors */
 /// @title MockAavePool

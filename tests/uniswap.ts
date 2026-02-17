@@ -18,11 +18,12 @@ import {
 const PROTOCOL_ID = `0x${'22'.repeat(32)}`;
 const UNISWAP_AZTEC_DIR = 'packages/protocols/uniswap/aztec';
 const UNISWAP_SOLIDITY_DIR = 'packages/protocols/uniswap/solidity';
+const UNISWAP_MOCKS_SOLIDITY_DIR = 'tests/mocks/uniswap/solidity';
 const TOKEN_IN = '0x000000000000000000000000000000000000ABCD';
 const TOKEN_OUT = '0x000000000000000000000000000000000000BEEF';
 
 test(
-  'real Uniswap E2E: Aztec private state + L1 Uniswap portal flow',
+  'Uniswap E2E: Aztec private state + L1 Uniswap portal flow',
   { timeout: 900_000 },
   async () => {
     const runtime = await ensureAztecLocalNetwork();
@@ -35,8 +36,8 @@ test(
       );
 
       const routerAddress = deployL1(
-        'packages/protocols/uniswap/solidity/MockUniswapV3Router.sol:MockUniswapV3Router',
-        UNISWAP_SOLIDITY_DIR,
+        'tests/mocks/uniswap/solidity/MockUniswapV3Router.sol:MockUniswapV3Router',
+        UNISWAP_MOCKS_SOLIDITY_DIR,
       );
       castSend(USER_PRIVATE_KEY, routerAddress, 'setSimulatedAmountOut(uint256)', ['1200']);
 
