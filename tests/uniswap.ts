@@ -196,6 +196,7 @@ test('Uniswap E2E: unauthorized relayer cannot execute swap', { timeout: 900_000
       'requestSwap(bytes32,address,address,uint256,uint256,uint24,address)',
       requestArgs(context.content),
     );
+    const hash = requestHash(context.portalAddress, context.content, NONCE_ONE);
 
     assert.throws(() => {
       castSend(
@@ -205,6 +206,11 @@ test('Uniswap E2E: unauthorized relayer cannot execute swap', { timeout: 900_000
         executeArgs(context.content),
       );
     });
+
+    assert.equal(
+      castCall(context.portalAddress, 'hasMessageBeenConsumed(bytes32)(bool)', [hash]),
+      'false',
+    );
   });
 });
 
@@ -218,6 +224,12 @@ test('Uniswap E2E: request validation rejects zero recipient', { timeout: 900_00
         [context.content, TOKEN_IN, TOKEN_OUT, '1000', '900', FEE_BPS, ZERO_ADDRESS],
       );
     });
+
+    const hash = requestHash(context.portalAddress, context.content, NONCE_ONE);
+    assert.equal(
+      castCall(context.portalAddress, 'hasMessageBeenIssued(bytes32)(bool)', [hash]),
+      'false',
+    );
   });
 });
 

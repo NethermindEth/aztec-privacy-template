@@ -81,14 +81,16 @@ const DEFAULT_REQUEST_HASH_ARGS = (ctx: ProtocolFlowContext): string[] => [
 ];
 
 export async function runProtocolE2EHappyPath(spec: ProtocolFlowSpec): Promise<void> {
-  logStep(spec.tag, 0, 'Start local Aztec + L1 runtime');
+  let step = 0;
+
+  logStep(spec.tag, step++, 'Start local Aztec + L1 runtime');
   const runtime: LocalRuntime = await ensureAztecLocalNetwork();
 
   try {
-    logStep(spec.tag, 1, 'Compile Aztec adapter');
+    logStep(spec.tag, step++, 'Compile Aztec adapter');
     compileAztecContract(spec.aztec.dir);
 
-    logStep(spec.tag, 2, 'Provision private Aztec token balance');
+    logStep(spec.tag, step++, 'Provision private Aztec token balance');
     const aztecState = await provisionPrivateTokenBalance(
       spec.aztec.tokenName,
       spec.aztec.tokenSymbol,
@@ -97,13 +99,13 @@ export async function runProtocolE2EHappyPath(spec: ProtocolFlowSpec): Promise<v
     logValue(spec.tag, 'Aztec owner', aztecState.ownerAddress);
     logValue(spec.tag, 'Aztec private balance', aztecState.balance);
 
-    logStep(spec.tag, 3, 'Build request content hash');
+    logStep(spec.tag, step++, 'Build request content hash');
     const content = castKeccak(
       spec.buildContent(aztecState.ownerAddress, aztecState.balance.toString()),
     );
     logValue(spec.tag, 'Request content hash', content);
 
-    logStep(spec.tag, 4, 'Deploy L1 dependencies');
+    logStep(spec.tag, step++, 'Deploy L1 dependencies');
     const deployedMocks: Record<string, string> = {};
     for (const mock of spec.mocks) {
       const deployed = deployL1(mock.source, mock.contractsDir);
@@ -136,11 +138,11 @@ export async function runProtocolE2EHappyPath(spec: ProtocolFlowSpec): Promise<v
     };
 
     if (spec.setup) {
-      logStep(spec.tag, 5, 'Protocol-specific setup');
+      logStep(spec.tag, step++, 'Protocol-specific setup');
       await spec.setup(baseContext);
     }
 
-    logStep(spec.tag, 6, 'Submit request to portal');
+    logStep(spec.tag, step++, 'Submit request to portal');
     const requestArgs = spec.request.args(baseContext);
     castSend(USER_PRIVATE_KEY, portalAddress, spec.request.signature, requestArgs);
 
@@ -152,7 +154,7 @@ export async function runProtocolE2EHappyPath(spec: ProtocolFlowSpec): Promise<v
     );
     logValue(spec.tag, 'Request hash', requestHash);
 
-    logStep(spec.tag, 7, 'Execute request on relayer');
+    logStep(spec.tag, step++, 'Execute request on relayer');
     const executionContext: ProtocolFlowContext = {
       ...baseContext,
       requestHash,
@@ -167,7 +169,7 @@ export async function runProtocolE2EHappyPath(spec: ProtocolFlowSpec): Promise<v
       spec.execute.valueWei,
     );
 
-    logStep(spec.tag, 8, 'Assert consumed request state');
+    logStep(spec.tag, step++, 'Assert consumed request state');
     const consumed = castCall(portalAddress, 'hasMessageBeenConsumed(bytes32)(bool)', [
       requestHash,
     ]);

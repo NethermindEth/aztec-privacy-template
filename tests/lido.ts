@@ -158,6 +158,7 @@ test('Lido E2E: unauthorized relayer cannot execute stake', { timeout: 900_000 }
       'requestStake(bytes32,uint256,address,address)',
       requestArgs(context.content),
     );
+    const hash = requestHash(context.portalAddress, context.content, NONCE_ONE);
 
     assert.throws(() => {
       castSend(
@@ -168,6 +169,11 @@ test('Lido E2E: unauthorized relayer cannot execute stake', { timeout: 900_000 }
         ONE_ETH_WEI,
       );
     });
+
+    assert.equal(
+      castCall(context.portalAddress, 'hasMessageBeenConsumed(bytes32)(bool)', [hash]),
+      'false',
+    );
   });
 });
 
@@ -181,6 +187,12 @@ test('Lido E2E: request validation rejects zero recipient', { timeout: 900_000 }
         [context.content, ONE_ETH_WEI, ZERO_ADDRESS, ZERO_ADDRESS],
       );
     });
+
+    const hash = requestHash(context.portalAddress, context.content, NONCE_ONE);
+    assert.equal(
+      castCall(context.portalAddress, 'hasMessageBeenIssued(bytes32)(bool)', [hash]),
+      'false',
+    );
   });
 });
 

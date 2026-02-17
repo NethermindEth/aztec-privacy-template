@@ -174,6 +174,7 @@ test('Aave E2E: unauthorized relayer cannot execute deposit', { timeout: 900_000
       'requestDeposit(bytes32,uint256,uint16)',
       aaveRequestArgs(context.content),
     );
+    const requestHash = aaveRequestHash(context.portalAddress, context.content, NONCE_ONE);
 
     assert.throws(() => {
       castSend(
@@ -183,6 +184,11 @@ test('Aave E2E: unauthorized relayer cannot execute deposit', { timeout: 900_000
         aaveExecuteArgs(context.content),
       );
     });
+
+    assert.equal(
+      castCall(context.portalAddress, 'hasMessageBeenConsumed(bytes32)(bool)', [requestHash]),
+      'false',
+    );
   });
 });
 
@@ -195,6 +201,12 @@ test('Aave E2E: invalid deposit request amount is rejected', { timeout: 900_000 
         AAVE_REFERRAL_CODE,
       ]);
     });
+
+    const requestHash = aaveRequestHash(context.portalAddress, context.content, NONCE_ONE);
+    assert.equal(
+      castCall(context.portalAddress, 'hasMessageBeenIssued(bytes32)(bool)', [requestHash]),
+      'false',
+    );
   });
 });
 
