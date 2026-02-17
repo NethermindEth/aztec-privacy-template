@@ -102,7 +102,7 @@ Exit criteria:
 - Single command builds generated artifacts deterministically.
 - Generated files are consistent and not hand-edited.
 
-## Phase 3: Aave Core Flow (Reference 1)
+## Phase 3: Aave Core Flow (Reference 1) **COMPLETE**
 
 Goal: first complete end-to-end reference (deposit/withdraw only).
 
