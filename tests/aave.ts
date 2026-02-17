@@ -60,19 +60,22 @@ function mineBlocks(count: number): void {
 }
 
 function parseEscapeRequest(raw: string): EscapeRequest {
-	const parts = raw
-		.replace(/^\s*\(/, "")
-		.replace(/\)\s*$/, "")
-		.split(",")
-		.map((part) => part.trim());
+	const cleaned = raw.replace(/\[[^\]]*]/g, "").trim();
+	const addresses = cleaned.match(/0x[a-fA-F0-9]{40}/g) ?? [];
+	const numbers = cleaned.match(/\b\d+\b/g) ?? [];
+	const claimed = /\btrue\b/.test(cleaned);
+
+	if (addresses.length < 2 || numbers.length < 3) {
+		throw new Error(`Unable to parse escape request output: ${raw}`);
+	}
 
 	return {
-		depositor: parts[0],
-		token: parts[1],
-		amount: BigInt(parts[2]),
-		createdAtBlock: BigInt(parts[3]),
-		timeoutBlocks: BigInt(parts[4]),
-		claimed: parts[5] === "true",
+		depositor: addresses[0],
+		token: addresses[1],
+		amount: BigInt(numbers[0]),
+		createdAtBlock: BigInt(numbers[1]),
+		timeoutBlocks: BigInt(numbers[2]),
+		claimed,
 	};
 }
 
@@ -467,10 +470,13 @@ test(
 				context.portalAddress,
 				requestHash,
 			);
-			assert.equal(escapeRequest.depositor.toLowerCase(), USER_ADDRESS);
+			assert.equal(
+				escapeRequest.depositor.toLowerCase(),
+				USER_ADDRESS.toLowerCase(),
+			);
 			assert.equal(
 				escapeRequest.token.toLowerCase(),
-				context.mocks.AAVE_MOCK_ERC20,
+				context.mocks.AAVE_MOCK_ERC20.toLowerCase(),
 			);
 			assert.equal(escapeRequest.amount, BigInt(AAVE_REQUEST_AMOUNT));
 			assert.equal(escapeRequest.timeoutBlocks, BigInt(DEFAULT_TIMEOUT_BLOCKS));
@@ -555,10 +561,13 @@ test(
 				context.portalAddress,
 				requestHash,
 			);
-			assert.equal(escapeRequest.depositor.toLowerCase(), USER_ADDRESS);
+			assert.equal(
+				escapeRequest.depositor.toLowerCase(),
+				USER_ADDRESS.toLowerCase(),
+			);
 			assert.equal(
 				escapeRequest.token.toLowerCase(),
-				context.mocks.AAVE_MOCK_ERC20,
+				context.mocks.AAVE_MOCK_ERC20.toLowerCase(),
 			);
 			assert.equal(escapeRequest.amount, BigInt(AAVE_REQUEST_AMOUNT));
 			assert.equal(escapeRequest.timeoutBlocks, BigInt(DEFAULT_TIMEOUT_BLOCKS));
