@@ -1,0 +1,11 @@
+[metadata]
+name = "uniswap"
+
+[privacy]
+recipient_private = false
+
+[runtime]
+default_gas_limit = 3500000
+
+[addresses]
+protocol_contract = "0xC000000000000000000000000000000000000000"

@@ -1,0 +1,11 @@
+[metadata]
+name = "lido"
+
+[privacy]
+amount_private = false
+
+[runtime]
+escape_timeout_blocks = 1500
+
+[addresses]
+protocol_contract = "0xD000000000000000000000000000000000000000"

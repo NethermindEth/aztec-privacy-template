@@ -1,0 +1,12 @@
+[metadata]
+name = "aave"
+
+[privacy]
+memo_private = true
+
+[runtime]
+escape_timeout_blocks = 900
+
+[addresses]
+protocol_contract = "0xA0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" # placeholder address style
+token_address = "0xB000000000000000000000000000000000000000"

@@ -3,17 +3,6 @@
   "vcs": {
     "enabled": false
   },
-  "files": {
-    "includes": [
-      "**",
-      "!**/node_modules/**",
-      "!**/dist/**",
-      "!**/build/**",
-      "!**/coverage/**",
-      "!target/**",
-      "!**/*.sol"
-    ]
-  },
   "formatter": {
     "enabled": true,
     "indentStyle": "space",

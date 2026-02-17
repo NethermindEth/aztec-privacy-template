@@ -84,7 +84,7 @@ Exit criteria:
 - Core contracts/libraries tested and lint-clean.
 - No protocol-specific code required to validate core behavior.
 
-## Phase 2: Config and Build Pipeline
+## Phase 2: Config and Build Pipeline **COMPLETE**
 
 Goal: make config the single source of truth and generate artifacts reproducibly.
 

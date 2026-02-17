@@ -5,13 +5,14 @@
   "description": "Aztec privacy template scaffold",
   "license": "MIT",
   "scripts": {
-    "fmt": "bunx biome format --write .",
-    "fmt:check": "bunx biome format --write=false .",
-    "lint": "bunx biome lint .",
+    "fmt": "bunx biome format --config-path .biome.json --write .",
+    "fmt:check": "bunx biome format --config-path .biome.json --write=false .",
+    "lint": "bunx biome lint --config-path .biome.json .",
     "test": "bun test"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
+    "toml": "^3.0.0",
     "solhint": "^4.5.4"
   }
 }
