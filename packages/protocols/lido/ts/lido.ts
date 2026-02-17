@@ -86,11 +86,16 @@ export class LidoProtocolClient {
     const amount = normalizeAmount(input.amount);
     const referral = input.referral ? ensureAddress(input.referral) : undefined;
 
-    return {
+    const payload: LidoFlowPayload = {
       recipient,
       amount,
-      referral,
     };
+
+    if (referral !== undefined) {
+      payload.referral = referral;
+    }
+
+    return payload;
   }
 
   public buildUnstakePayload(input: LidoUnstakeInput): LidoFlowPayload {

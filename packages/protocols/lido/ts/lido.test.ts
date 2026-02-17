@@ -55,6 +55,17 @@ test('builds and verifies stake message', () => {
   assert.equal(verifyPrivateMessage(encoded, client.protocolName, LIDO_STAKE_ACTION), true);
 });
 
+test('builds and verifies stake message without referral', () => {
+  const client = new LidoProtocolClient();
+  const encoded = client.buildStakeMessage({
+    recipient: '0xb000000000000000000000000000000000000001',
+    amount: 50,
+  });
+
+  assert.equal(verifyPrivateMessage(encoded, client.protocolName, LIDO_STAKE_ACTION), true);
+  assert.equal(encoded.payload.includes('undefined'), false);
+});
+
 test('builds and verifies unstake message', () => {
   const client = new LidoProtocolClient();
   const encoded = client.buildUnstakeMessage({

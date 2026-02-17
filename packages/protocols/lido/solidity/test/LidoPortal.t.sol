@@ -78,10 +78,10 @@ contract LidoPortalTest is Test {
         vm.prank(user);
         portal.requestStake(content, 1 ether, stakeRecipient, address(0));
 
-        vm.deal(relayer, 1 ether);
+        vm.deal(relayer, 2 ether);
         vm.prank(relayer);
         vm.expectRevert(LidoPortal.FlowRequestMismatch.selector);
-        portal.executeStake{value: 1 ether}(content, user, 2 ether, stakeRecipient, address(0), 1, 0);
+        portal.executeStake{value: 2 ether}(content, user, 2 ether, stakeRecipient, address(0), 1, 0);
     }
 
     /// @notice falls back to escape hatch when stake call fails.
