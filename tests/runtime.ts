@@ -271,9 +271,7 @@ export function castKeccak(value: string): string {
 }
 
 type AztecSdkModules = {
-  getInitialTestAccountsData: typeof import(
-    '@aztec/accounts/testing/lazy',
-  ).getInitialTestAccountsData;
+  getInitialTestAccountsData: typeof import('@aztec/accounts/testing/lazy').getInitialTestAccountsData;
   createAztecNodeClient: typeof import('@aztec/aztec.js/node').createAztecNodeClient;
   TokenContract: typeof import('@aztec/noir-contracts.js/Token').TokenContract;
   TestWallet: typeof import('@aztec/test-wallet/server').TestWallet;
