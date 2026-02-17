@@ -176,7 +176,7 @@ Exit criteria:
 
 - Optional features are additive and do not break core path.
 
-## Phase 8: Documentation and Release Hardening
+## Phase 8: Documentation and Release Hardening **COMPLETE**
 
 Goal: make template fork-ready and operationally clear.
 
