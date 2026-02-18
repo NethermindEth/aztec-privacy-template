@@ -80,50 +80,9 @@ export function run(
   return result;
 }
 
-type AztecCompileInvocation = {
-  command: string;
-  args: string[];
-};
-
-let cachedAztecCompileInvocation: AztecCompileInvocation | null = null;
-
-function supportsCommand(command: string, args: string[]): boolean {
-  const result = spawnSync(command, args, {
-    encoding: 'utf8',
-    timeout: 10_000,
-  });
-  return result.status === 0;
-}
-
-function resolveAztecCompileInvocation(): AztecCompileInvocation {
-  if (cachedAztecCompileInvocation) {
-    return cachedAztecCompileInvocation;
-  }
-
-  if (supportsCommand('aztec', ['compile', '--help'])) {
-    cachedAztecCompileInvocation = { command: 'aztec', args: ['compile'] };
-    return cachedAztecCompileInvocation;
-  }
-
-  if (supportsCommand('aztec-nargo', ['compile', '--help'])) {
-    cachedAztecCompileInvocation = { command: 'aztec-nargo', args: ['compile'] };
-    return cachedAztecCompileInvocation;
-  }
-
-  if (supportsCommand('nargo', ['compile', '--help'])) {
-    cachedAztecCompileInvocation = { command: 'nargo', args: ['compile'] };
-    return cachedAztecCompileInvocation;
-  }
-
-  throw new Error(
-    "No supported Aztec Noir compiler command found (tried: 'aztec compile', 'aztec-nargo compile', 'nargo compile').",
-  );
-}
-
 export function compileAztecContract(relativeDir: string): void {
-  const invocation = resolveAztecCompileInvocation();
-  run(invocation.command, invocation.args, {
-    cwd: `${REPO_ROOT}/${relativeDir}`,
+  run('bash', [`${REPO_ROOT}/scripts/compile-aztec-contract.sh`, `${REPO_ROOT}/${relativeDir}`], {
+    cwd: REPO_ROOT,
     timeoutMs: 240_000,
   });
 }

@@ -157,18 +157,7 @@ build-aztec:
 	fi
 	@for dir in $(AZTEC_CONTRACT_DIRS); do \
 		echo "Compiling $$dir"; \
-		(cd $$dir && \
-			if aztec compile --help >/dev/null 2>&1; then \
-				aztec compile; \
-			elif command -v aztec-nargo >/dev/null 2>&1 && aztec-nargo compile --help >/dev/null 2>&1; then \
-				aztec-nargo compile; \
-			elif command -v nargo >/dev/null 2>&1 && nargo compile --help >/dev/null 2>&1; then \
-				nargo compile; \
-			else \
-				echo "No supported Aztec Noir compiler command found (tried: 'aztec compile', 'aztec-nargo compile', 'nargo compile')."; \
-				exit 1; \
-			fi \
-		); \
+		bash scripts/compile-aztec-contract.sh $$dir; \
 	done
 
 $(BUILD_PROTOCOLS): build-protocol-%:
@@ -176,48 +165,15 @@ $(BUILD_PROTOCOLS): build-protocol-%:
 
 protocol-aave:
 	@echo "Building Aave protocol artifacts..."
-	@(cd packages/protocols/aave/aztec && \
-		if aztec compile --help >/dev/null 2>&1; then \
-			aztec compile; \
-		elif command -v aztec-nargo >/dev/null 2>&1 && aztec-nargo compile --help >/dev/null 2>&1; then \
-			aztec-nargo compile; \
-		elif command -v nargo >/dev/null 2>&1 && nargo compile --help >/dev/null 2>&1; then \
-			nargo compile; \
-		else \
-			echo "No supported Aztec Noir compiler command found (tried: 'aztec compile', 'aztec-nargo compile', 'nargo compile')."; \
-			exit 1; \
-		fi \
-	)
+	@bash scripts/compile-aztec-contract.sh packages/protocols/aave/aztec
 
 protocol-uniswap:
 	@echo "Building Uniswap protocol artifacts..."
-	@(cd packages/protocols/uniswap/aztec && \
-		if aztec compile --help >/dev/null 2>&1; then \
-			aztec compile; \
-		elif command -v aztec-nargo >/dev/null 2>&1 && aztec-nargo compile --help >/dev/null 2>&1; then \
-			aztec-nargo compile; \
-		elif command -v nargo >/dev/null 2>&1 && nargo compile --help >/dev/null 2>&1; then \
-			nargo compile; \
-		else \
-			echo "No supported Aztec Noir compiler command found (tried: 'aztec compile', 'aztec-nargo compile', 'nargo compile')."; \
-			exit 1; \
-		fi \
-	)
+	@bash scripts/compile-aztec-contract.sh packages/protocols/uniswap/aztec
 
 protocol-lido:
 	@echo "Building Lido protocol artifacts..."
-	@(cd packages/protocols/lido/aztec && \
-		if aztec compile --help >/dev/null 2>&1; then \
-			aztec compile; \
-		elif command -v aztec-nargo >/dev/null 2>&1 && aztec-nargo compile --help >/dev/null 2>&1; then \
-			aztec-nargo compile; \
-		elif command -v nargo >/dev/null 2>&1 && nargo compile --help >/dev/null 2>&1; then \
-			nargo compile; \
-		else \
-			echo "No supported Aztec Noir compiler command found (tried: 'aztec compile', 'aztec-nargo compile', 'nargo compile')."; \
-			exit 1; \
-		fi \
-	)
+	@bash scripts/compile-aztec-contract.sh packages/protocols/lido/aztec
 
 clean:
 	@echo "Cleaning build artifacts..."
