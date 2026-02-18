@@ -7,12 +7,11 @@
   "bin": {
     "create-aztec-privacy-template": "dist/cli.js"
   },
-  "files": [
-    "dist",
-    "scaffold",
-    "README.md"
-  ],
+  "files": ["dist", "scaffold", "overlays", "README.md"],
   "scripts": {
+    "fmt": "bunx biome format --config-path ../../.biome.json --write src test",
+    "fmt:check": "bunx biome format --config-path ../../.biome.json src test",
+    "lint": "bunx biome lint --config-path ../../.biome.json src test",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "bun run build && node --test test/**/*.test.mjs",

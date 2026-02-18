@@ -153,7 +153,7 @@ packages/create-aztec-privacy-template/
 
 1. Zero `__PLACEHOLDER__` tokens left in generated output.
 
-## Phase 4: Optional example overlays
+## Phase 4: Optional example overlays **COMPLETE**
 
 ### Changes
 

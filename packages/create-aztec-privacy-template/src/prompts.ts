@@ -1,9 +1,7 @@
 export interface PromptOptions {
-	yes: boolean;
+  yes: boolean;
 }
 
-export async function resolvePromptOptions(
-	options: PromptOptions,
-): Promise<PromptOptions> {
-	return options;
+export async function resolvePromptOptions(options: PromptOptions): Promise<PromptOptions> {
+  return options;
 }

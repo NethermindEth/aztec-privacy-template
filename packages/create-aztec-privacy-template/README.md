@@ -6,11 +6,18 @@ CLI package that scaffolds a protocol-agnostic Aztec privacy starter:
 npx create-aztec-privacy-template my-app
 ```
 
+With overlays:
+
+```bash
+npx create-aztec-privacy-template my-app --example all
+```
+
 ## Layout
 
 1. `src/` generator TypeScript source
 2. `dist/` compiled CLI output (published)
 3. `scaffold/` files copied into generated projects
+4. `overlays/examples/` optional protocol overlays (`aave`, `lido`, `uniswap`)
 
 ## Development workflow
 
