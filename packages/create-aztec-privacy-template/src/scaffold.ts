@@ -1,48 +1,46 @@
-import { cp, mkdir, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { cp, mkdir, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 
 import {
-  STARTER_PACKAGE_JSON_BASE,
-  TEMPLATE_COPY_ENTRIES,
-  type PackageManager,
-} from './constants.js';
+	SCAFFOLD_DIR,
+	STARTER_PACKAGE_JSON_BASE,
+	TEMPLATE_COPY_ENTRIES,
+} from "./constants.js";
 
 export interface ScaffoldOptions {
-  generatorRoot: string;
-  absoluteTargetPath: string;
-  projectName: string;
-  packageManager: PackageManager;
+	generatorRoot: string;
+	absoluteTargetPath: string;
+	projectName: string;
 }
 
-export async function scaffoldBaseTemplate(options: ScaffoldOptions): Promise<void> {
-  const { generatorRoot, absoluteTargetPath, projectName, packageManager } = options;
+export async function scaffoldBaseTemplate(
+	options: ScaffoldOptions,
+): Promise<void> {
+	const { generatorRoot, absoluteTargetPath, projectName } = options;
 
-  await mkdir(absoluteTargetPath, { recursive: true });
+	await mkdir(absoluteTargetPath, { recursive: true });
 
-  for (const entry of TEMPLATE_COPY_ENTRIES) {
-    if (entry === 'bun.lock' && packageManager !== 'bun') {
-      continue;
-    }
+	for (const entry of TEMPLATE_COPY_ENTRIES) {
+		const sourcePath = join(generatorRoot, SCAFFOLD_DIR, entry);
+		const destinationEntry = entry === "gitignore" ? ".gitignore" : entry;
+		const destinationPath = join(absoluteTargetPath, destinationEntry);
 
-    const sourcePath = join(generatorRoot, entry);
-    const destinationPath = join(absoluteTargetPath, entry);
+		await cp(sourcePath, destinationPath, {
+			recursive: true,
+			errorOnExist: true,
+			force: false,
+			preserveTimestamps: true,
+		});
+	}
 
-    await cp(sourcePath, destinationPath, {
-      recursive: true,
-      errorOnExist: true,
-      force: false,
-      preserveTimestamps: true,
-    });
-  }
+	const packageJson = {
+		...STARTER_PACKAGE_JSON_BASE,
+		name: projectName,
+	};
 
-  const packageJson = {
-    ...STARTER_PACKAGE_JSON_BASE,
-    name: projectName,
-  };
-
-  await writeFile(
-    join(absoluteTargetPath, 'package.json'),
-    `${JSON.stringify(packageJson, null, 2)}\n`,
-    'utf8',
-  );
+	await writeFile(
+		join(absoluteTargetPath, "package.json"),
+		`${JSON.stringify(packageJson, null, 2)}\n`,
+		"utf8",
+	);
 }

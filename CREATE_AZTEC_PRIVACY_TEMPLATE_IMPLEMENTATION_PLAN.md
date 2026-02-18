@@ -88,7 +88,29 @@ packages/create-aztec-privacy-template/
 1. Base template runs standalone.
 2. No example-specific files in base template.
 
-## Phase 2: Generator package MVP (base only)
+## Phase 1: Base template extraction (agnostic starter) **COMPLETE**
+
+### Changes
+
+1. Create root scaffold files in `packages/create-aztec-privacy-template` from current repo essentials only.
+2. Replace protocol-specific naming with neutral naming where required.
+3. Add comprehensive docs:
+   - inline NatSpec for contracts
+   - top-level README + package README walkthroughs
+
+### Testability
+
+1. Manually copy `packages/create-aztec-privacy-template` to `/tmp` and run:
+   - `make install`
+   - `make check`
+   - `make test-flow` (or minimal base equivalent)
+
+### Exit criteria
+
+1. Base template runs standalone.
+2. No example-specific files in base template.
+
+## Phase 2: Generator package MVP (base only) **COMPLETE**
 
 ### Changes
 
