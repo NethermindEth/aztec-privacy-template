@@ -9,13 +9,13 @@ import { fileURLToPath } from 'node:url';
 const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SHOULD_RUN_SMOKE = process.env.CAPT_RUN_PUBLISHED_ARTIFACT_SMOKE === '1';
 
-test('phase6 published artifact smoke scaffolds from npm pack output', async (t) => {
+test('published artifact smoke scaffolds from npm pack output', async (t) => {
   if (!SHOULD_RUN_SMOKE) {
     t.skip('Set CAPT_RUN_PUBLISHED_ARTIFACT_SMOKE=1 to run published artifact smoke test.');
     return;
   }
 
-  const tempRoot = await mkdtemp(join(tmpdir(), 'capt-phase6-pack-smoke-'));
+  const tempRoot = await mkdtemp(join(tmpdir(), 'capt-pack-smoke-'));
   const packDir = join(tempRoot, 'pack');
   const unpackDir = join(tempRoot, 'unpack');
   const target = join(tempRoot, 'artifact-smoke-app');

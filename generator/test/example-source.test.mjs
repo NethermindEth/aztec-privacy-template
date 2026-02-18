@@ -68,7 +68,7 @@ test('parseGithubExampleSource rejects malformed refs', () => {
 });
 
 test('installExampleSource retries transient failures and applies on a later attempt', async () => {
-  const target = await mkdtemp(join(tmpdir(), 'capt-phase5-retry-success-'));
+  const target = await mkdtemp(join(tmpdir(), 'capt-example-source-retry-success-'));
   let fetchAttempts = 0;
 
   try {
@@ -113,7 +113,7 @@ test('installExampleSource retries transient failures and applies on a later att
 });
 
 test('installExampleSource returns fallback metadata after retry exhaustion', async () => {
-  const target = await mkdtemp(join(tmpdir(), 'capt-phase5-retry-fallback-'));
+  const target = await mkdtemp(join(tmpdir(), 'capt-example-source-retry-fallback-'));
   let fetchAttempts = 0;
 
   try {
@@ -146,8 +146,8 @@ test('installExampleSource returns fallback metadata after retry exhaustion', as
 });
 
 test('createApp falls back to local examples when remote source installation fails', async () => {
-  const tempRoot = await mkdtemp(join(tmpdir(), 'capt-phase5-create-app-'));
-  const target = join(tempRoot, 'phase5-fallback-app');
+  const tempRoot = await mkdtemp(join(tmpdir(), 'capt-example-source-create-app-'));
+  const target = join(tempRoot, 'example-source-fallback-app');
   const calls = {
     install: [],
     postInit: [],

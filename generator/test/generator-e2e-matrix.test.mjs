@@ -29,7 +29,7 @@ const EXAMPLE_DIRS_BY_SELECTION = {
   all: ['aave', 'lido', 'uniswap'],
 };
 
-test('phase6 generator e2e matrix case', async (t) => {
+test('generator e2e matrix case', async (t) => {
   if (!E2E_PM || !E2E_EXAMPLE || !E2E_INSTALL_MODE) {
     t.skip('CAPT_E2E_PM, CAPT_E2E_EXAMPLE, and CAPT_E2E_INSTALL_MODE are required for this test.');
     return;
@@ -48,7 +48,7 @@ test('phase6 generator e2e matrix case', async (t) => {
     `Unsupported CAPT_E2E_INSTALL_MODE "${E2E_INSTALL_MODE}". Expected "skip" or "install".`,
   );
 
-  const root = await mkdtemp(join(tmpdir(), 'capt-phase6-e2e-'));
+  const root = await mkdtemp(join(tmpdir(), 'capt-generator-e2e-'));
   const target = join(root, `matrix-${E2E_PM}-${E2E_EXAMPLE}-${E2E_INSTALL_MODE}`);
 
   try {

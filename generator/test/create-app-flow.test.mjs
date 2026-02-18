@@ -10,8 +10,8 @@ import { createApp } from '../dist/create-app.js';
 const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 test('createApp installs dependencies, runs post-init hooks, and initializes git by default', async () => {
-  const tempRoot = await mkdtemp(join(tmpdir(), 'capt-phase4-default-'));
-  const target = join(tempRoot, 'phase4-default');
+  const tempRoot = await mkdtemp(join(tmpdir(), 'capt-create-app-default-'));
+  const target = join(tempRoot, 'create-app-default');
 
   const calls = {
     install: [],
@@ -58,8 +58,8 @@ test('createApp installs dependencies, runs post-init hooks, and initializes git
 });
 
 test('createApp honors --skip-install and --disable-git flow flags', async () => {
-  const tempRoot = await mkdtemp(join(tmpdir(), 'capt-phase4-skip-'));
-  const target = join(tempRoot, 'phase4-skip');
+  const tempRoot = await mkdtemp(join(tmpdir(), 'capt-create-app-skip-'));
+  const target = join(tempRoot, 'create-app-skip');
 
   const calls = {
     install: [],

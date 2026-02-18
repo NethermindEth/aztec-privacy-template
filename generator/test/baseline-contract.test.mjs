@@ -92,8 +92,8 @@ test('baseline scaffold contract is stable for selected matrix combinations', as
   for (const packageManager of packageManagers) {
     for (const exampleSelection of exampleSelections) {
       const caseLabel = `${packageManager}/${exampleSelection}`;
-      const projectName = `phase0-${packageManager}-${exampleSelection}`;
-      const target = await mkdtemp(join(tmpdir(), 'capt-phase0-'));
+      const projectName = `baseline-${packageManager}-${exampleSelection}`;
+      const target = await mkdtemp(join(tmpdir(), 'capt-baseline-'));
 
       try {
         await scaffoldBaseTemplate({

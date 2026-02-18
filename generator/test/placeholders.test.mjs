@@ -42,18 +42,18 @@ test('scaffoldBaseTemplate emits project metadata with no unresolved placeholder
     await scaffoldBaseTemplate({
       generatorRoot: PACKAGE_ROOT,
       absoluteTargetPath: target,
-      projectName: 'phase3-smoke',
+      projectName: 'placeholder-smoke',
       packageManager: 'npm',
     });
 
     const readme = await readFile(join(target, 'README.md'), 'utf8');
-    assert.match(readme, /^# phase3-smoke/m);
+    assert.match(readme, /^# placeholder-smoke/m);
     assert.match(readme, /npm install/);
     assert.doesNotMatch(readme, /__[A-Z0-9_]+__/);
 
     const packageJsonRaw = await readFile(join(target, 'package.json'), 'utf8');
     const packageJson = JSON.parse(packageJsonRaw);
-    assert.equal(packageJson.name, 'phase3-smoke');
+    assert.equal(packageJson.name, 'placeholder-smoke');
 
     await assert.rejects(() => access(join(target, 'examples', 'aave', 'README.md')));
   } finally {

@@ -33,7 +33,7 @@ function restoreEnv(snapshot) {
 }
 
 test('tryGitInit initializes repository and creates initial commit', async () => {
-  const tempRoot = await mkdtemp(join(tmpdir(), 'capt-phase4-git-'));
+  const tempRoot = await mkdtemp(join(tmpdir(), 'capt-git-helper-'));
   const target = join(tempRoot, 'app');
   const envRoot = join(tempRoot, 'git-env');
   const originalEnv = { ...process.env };
@@ -65,7 +65,7 @@ test('tryGitInit initializes repository and creates initial commit', async () =>
 });
 
 test('tryGitInit returns false when target is inside an existing git repository', async () => {
-  const tempRoot = await mkdtemp(join(tmpdir(), 'capt-phase4-parent-git-'));
+  const tempRoot = await mkdtemp(join(tmpdir(), 'capt-git-helper-parent-'));
   const repoRoot = join(tempRoot, 'workspace');
   const nestedTarget = join(repoRoot, 'nested', 'app');
 
