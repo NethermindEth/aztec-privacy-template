@@ -32,13 +32,18 @@ packages/create-aztec-privacy-template/
 |   |-- placeholders.ts
 |   |-- validate.ts
 |   `-- constants.ts
-|-- templates/
-|   |-- base/
-|   `-- examples/
-|       |-- aave/
-|       |-- lido/
-|       `-- uniswap/
-`-- test/
+|-- contracts/
+|   |-- l1/
+|   `-- aztec/
+|-- scripts/
+|-- Makefile
+|-- README.md
+`-- overlays/
+    `-- examples/
+        |-- aave/
+        |-- lido/
+        `-- uniswap/
+|-- test/
     |-- unit/
     `-- smoke/
 ```
@@ -61,11 +66,11 @@ packages/create-aztec-privacy-template/
 1. A single authoritative contract doc for generator output exists.
 2. See `CREATE_AZTEC_PRIVACY_TEMPLATE_OUTPUT_CONTRACT.md`.
 
-## Phase 1: Base template extraction (agnostic starter)
+## Phase 1: Base template extraction (agnostic starter) **COMPLETE**
 
 ### Changes
 
-1. Create `templates/base` from current repo essentials only.
+1. Create root scaffold files in `packages/create-aztec-privacy-template` from current repo essentials only.
 2. Replace protocol-specific naming with neutral naming where required.
 3. Add comprehensive docs:
    - inline NatSpec for contracts
@@ -73,10 +78,10 @@ packages/create-aztec-privacy-template/
 
 ### Testability
 
-1. Manually copy `templates/base` to `/tmp` and run:
+1. Manually copy `packages/create-aztec-privacy-template` to `/tmp` and run:
    - `make install`
    - `make check`
-   - `make test-e2e-fast` (or minimal base equivalent)
+   - `make test-flow` (or minimal base equivalent)
 
 ### Exit criteria
 
@@ -130,7 +135,7 @@ packages/create-aztec-privacy-template/
 
 ### Changes
 
-1. Add `templates/examples/{aave,lido,uniswap}`.
+1. Add `overlays/examples/{aave,lido,uniswap}`.
 2. Implement overlay pipeline:
    - apply base
    - apply chosen overlays in deterministic order

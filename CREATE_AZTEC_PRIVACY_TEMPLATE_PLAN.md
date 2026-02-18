@@ -40,8 +40,8 @@ The generated template must ship with full instructional documentation:
 ## 3) Use static file templates
 
 - Template layout:
-  - `packages/create-aztec-privacy-template/templates/base`
-  - `packages/create-aztec-privacy-template/templates/examples/{aave,lido,uniswap}`
+  - `packages/create-aztec-privacy-template/`
+  - `packages/create-aztec-privacy-template/overlays/examples/{aave,lido,uniswap}` (future phases)
 - Exclude generated artifacts from templates:
   - `node_modules`, `cache`, `out`, `target`, transient logs/locks.
 
