@@ -21,19 +21,19 @@ compile_with_aztec() {
   status=$?
   set -e
 
-  if printf '%s\n' "$output" | rg -q "unknown command 'compile'"; then
+  if printf '%s\n' "$output" | grep -q "unknown command 'compile'"; then
     return 2
   fi
 
-  if printf '%s\n' "$output" | rg -qi "permission denied while trying to connect to the docker API"; then
+  if printf '%s\n' "$output" | grep -qi "permission denied while trying to connect to the docker API"; then
     return 2
   fi
 
-  if printf '%s\n' "$output" | rg -q 'Conflict\. The container name "/aztec" is already in use'; then
+  if printf '%s\n' "$output" | grep -q 'Conflict\. The container name "/aztec" is already in use'; then
     return 2
   fi
 
-  if [ "$status" -eq 0 ] && printf '%s\n' "$output" | rg -q '^error:'; then
+  if [ "$status" -eq 0 ] && printf '%s\n' "$output" | grep -q '^error:'; then
     printf '%s\n' "$output" >&2
     return 1
   fi
