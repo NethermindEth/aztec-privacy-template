@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "description": "CLI to scaffold protocol-agnostic Aztec privacy starter projects",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NethermindEth/aztec-privacy-template.git"
+  },
   "type": "module",
   "bin": {
     "create-aztec-privacy-template": "dist/cli.js"
