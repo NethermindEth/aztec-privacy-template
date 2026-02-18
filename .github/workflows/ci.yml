@@ -51,7 +51,7 @@ jobs:
           CAPT_MATRIX_PM: ${{ matrix.pm }}
           CAPT_MATRIX_EXAMPLE: ${{ matrix.example }}
         run: |
-          cd packages/create-aztec-privacy-template
+          cd generator
           node --test test/baseline-contract.test.mjs
 
   generator-e2e-matrix:

@@ -56,7 +56,7 @@ jobs:
           set -euo pipefail
           temp_root="$(mktemp -d)"
           target="$temp_root/release-bootstrap-app"
-          node packages/create-aztec-privacy-template/dist/cli.js \
+          node generator/dist/cli.js \
             "$target" \
             --pm npm \
             --example none \
