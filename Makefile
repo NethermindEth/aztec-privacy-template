@@ -25,7 +25,7 @@ ADAPTER_FINALIZE_RETRY_TIMEOUT_MS ?= 90000
 ADAPTER_POLL_INTERVAL_MS ?= 500
 ADAPTER_FAIL_FAST ?= 1
 
-.PHONY: help install verify-toolchain fmt fmt-check lint typecheck test test-unit test-e2e test-e2e-fast test-e2e-adapters test-e2e-full build build-aztec clean check test-core lint-core protocol-aave protocol-uniswap protocol-lido build-protocol-% dev-sandbox-up dev-sandbox-down generator-install generator-lint generator-check generator-typecheck generator-build generator-test scaffold-help scaffold-check scaffold-test scaffold-build
+.PHONY: help install verify-toolchain fmt fmt-check lint typecheck test test-unit test-e2e test-e2e-fast test-e2e-adapters test-e2e-full build build-aztec clean check test-core lint-core protocol-aave protocol-uniswap protocol-lido build-protocol-% dev-sandbox-up dev-sandbox-down generator-install generator-lint generator-check generator-typecheck generator-build generator-test generator-e2e-case generator-published-artifact-smoke generator-release-check scaffold-help scaffold-check scaffold-test scaffold-build
 
 help:
 	@printf "Available targets:\n"
@@ -58,6 +58,9 @@ help:
 	@printf "  make generator-typecheck Type-check create-aztec-privacy-template\n"
 	@printf "  make generator-build Build create-aztec-privacy-template\n"
 	@printf "  make generator-test  Run generator unit/smoke tests\n"
+	@printf "  make generator-e2e-case Run one generator E2E matrix case (requires CAPT_E2E_* env vars)\n"
+	@printf "  make generator-published-artifact-smoke Run smoke test from npm pack artifact\n"
+	@printf "  make generator-release-check Run release validation for generator package\n"
 	@printf "  make scaffold-help   Show scaffolded-project Make targets\n"
 	@printf "  make scaffold-check  Run scaffold checks from template source\n"
 	@printf "  make scaffold-test   Run scaffold tests from template source\n"
@@ -302,6 +305,17 @@ generator-build: generator-install
 generator-test: generator-install
 	@echo "Running generator tests..."
 	@(cd $(GENERATOR_DIR) && $(BUN) run test)
+
+generator-e2e-case: generator-build
+	@echo "Running generator E2E matrix case..."
+	@(cd $(GENERATOR_DIR) && node --test test/generator-e2e-matrix.test.mjs)
+
+generator-published-artifact-smoke: generator-build
+	@echo "Running generator published artifact smoke test..."
+	@(cd $(GENERATOR_DIR) && CAPT_RUN_PUBLISHED_ARTIFACT_SMOKE=1 node --test test/published-artifact-smoke.test.mjs)
+
+generator-release-check: generator-check generator-published-artifact-smoke
+	@echo "Generator release validation complete."
 
 scaffold-help:
 	@$(MAKE) -C $(GENERATOR_SCAFFOLD_DIR) help
