@@ -12,6 +12,12 @@ With overlays:
 npx create-aztec-privacy-template my-app --example all
 ```
 
+With a remote GitHub example source overlay:
+
+```bash
+npx create-aztec-privacy-template my-app --example-source aztecprotocol/aztec-packages/examples/noir-contracts#master
+```
+
 ## Layout
 
 1. `src/` generator TypeScript source
