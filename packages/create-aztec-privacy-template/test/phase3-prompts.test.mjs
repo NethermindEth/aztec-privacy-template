@@ -42,6 +42,8 @@ test('--yes resolves omitted options from saved preferences/defaults without pro
       packageManager: 'bun',
       exampleSelection: 'none',
       yes: true,
+      skipInstall: false,
+      disableGit: false,
       packageManagerProvided: false,
       exampleSelectionProvided: false,
     },
@@ -51,6 +53,8 @@ test('--yes resolves omitted options from saved preferences/defaults without pro
   assert.equal(resolved.projectArg, 'my-aztec-app');
   assert.equal(resolved.packageManager, 'pnpm');
   assert.equal(resolved.exampleSelection, 'uniswap');
+  assert.equal(resolved.skipInstall, false);
+  assert.equal(resolved.disableGit, false);
   assert.deepEqual(mock.getAskedPrompts(), []);
   assert.deepEqual(mock.getSavedPreferences(), {
     packageManager: 'pnpm',
@@ -70,6 +74,8 @@ test('interactive mode prompts for omitted project, package manager, and example
       packageManager: 'bun',
       exampleSelection: 'none',
       yes: false,
+      skipInstall: false,
+      disableGit: false,
       packageManagerProvided: false,
       exampleSelectionProvided: false,
     },
@@ -79,6 +85,8 @@ test('interactive mode prompts for omitted project, package manager, and example
   assert.equal(resolved.projectArg, 'demo-app');
   assert.equal(resolved.packageManager, 'yarn');
   assert.equal(resolved.exampleSelection, 'all');
+  assert.equal(resolved.skipInstall, false);
+  assert.equal(resolved.disableGit, false);
   assert.equal(mock.getAskedPrompts().length, 3);
   assert.deepEqual(mock.getSavedPreferences(), {
     packageManager: 'yarn',
@@ -97,6 +105,8 @@ test('non-interactive mode without --yes fails when project argument is missing'
           packageManager: 'bun',
           exampleSelection: 'none',
           yes: false,
+          skipInstall: false,
+          disableGit: false,
           packageManagerProvided: false,
           exampleSelectionProvided: false,
         },

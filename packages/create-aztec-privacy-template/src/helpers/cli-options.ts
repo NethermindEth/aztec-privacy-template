@@ -6,13 +6,15 @@ export interface CliOptions {
   packageManager: PackageManager;
   exampleSelection: ExampleSelection;
   yes: boolean;
+  skipInstall: boolean;
+  disableGit: boolean;
   packageManagerProvided: boolean;
   exampleSelectionProvided: boolean;
 }
 
 export function printUsage(): void {
   console.log(
-    'Usage: create-aztec-privacy-template <project-name-or-path> [--pm <bun|npm|pnpm|yarn>] [--example <none|aave|lido|uniswap|all>] [--yes]',
+    'Usage: create-aztec-privacy-template <project-name-or-path> [--pm <bun|npm|pnpm|yarn>] [--example <none|aave|lido|uniswap|all>] [--yes] [--skip-install] [--disable-git]',
   );
 }
 
@@ -21,6 +23,8 @@ export function parseArgs(argv: string[]): CliOptions {
   let packageManager: PackageManager = 'bun';
   let exampleSelection: ExampleSelection = 'none';
   let yes = false;
+  let skipInstall = false;
+  let disableGit = false;
   let packageManagerProvided = false;
   let exampleSelectionProvided = false;
 
@@ -34,6 +38,16 @@ export function parseArgs(argv: string[]): CliOptions {
 
     if (arg === '--yes') {
       yes = true;
+      continue;
+    }
+
+    if (arg === '--skip-install') {
+      skipInstall = true;
+      continue;
+    }
+
+    if (arg === '--disable-git') {
+      disableGit = true;
       continue;
     }
 
@@ -95,6 +109,8 @@ export function parseArgs(argv: string[]): CliOptions {
     packageManager,
     exampleSelection,
     yes,
+    skipInstall,
+    disableGit,
     packageManagerProvided,
     exampleSelectionProvided,
   };

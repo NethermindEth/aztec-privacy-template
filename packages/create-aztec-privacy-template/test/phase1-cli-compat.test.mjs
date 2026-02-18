@@ -13,6 +13,8 @@ test('parseArgs preserves legacy flag behavior and defaults', () => {
     packageManager: 'bun',
     exampleSelection: 'none',
     yes: false,
+    skipInstall: false,
+    disableGit: false,
     packageManagerProvided: false,
     exampleSelectionProvided: false,
   });
@@ -22,15 +24,19 @@ test('parseArgs preserves legacy flag behavior and defaults', () => {
     packageManager: 'npm',
     exampleSelection: 'aave',
     yes: true,
+    skipInstall: false,
+    disableGit: false,
     packageManagerProvided: true,
     exampleSelectionProvided: true,
   });
 
-  assert.deepEqual(parseArgs(['my-app', '--pm=pnpm', '--example=all']), {
+  assert.deepEqual(parseArgs(['my-app', '--pm=pnpm', '--example=all', '--skip-install']), {
     projectArg: 'my-app',
     packageManager: 'pnpm',
     exampleSelection: 'all',
     yes: false,
+    skipInstall: true,
+    disableGit: false,
     packageManagerProvided: true,
     exampleSelectionProvided: true,
   });
@@ -40,6 +46,19 @@ test('parseArgs preserves legacy flag behavior and defaults', () => {
     packageManager: 'bun',
     exampleSelection: 'none',
     yes: false,
+    skipInstall: false,
+    disableGit: false,
+    packageManagerProvided: false,
+    exampleSelectionProvided: false,
+  });
+
+  assert.deepEqual(parseArgs(['my-app', '--disable-git']), {
+    projectArg: 'my-app',
+    packageManager: 'bun',
+    exampleSelection: 'none',
+    yes: false,
+    skipInstall: false,
+    disableGit: true,
     packageManagerProvided: false,
     exampleSelectionProvided: false,
   });
@@ -58,7 +77,10 @@ test('run scaffolds successfully through new index/create-app boundary', async (
 
   try {
     console.log = () => {};
-    await run([target, '--pm', 'npm', '--example', 'lido', '--yes'], import.meta.url);
+    await run(
+      [target, '--pm', 'npm', '--example', 'lido', '--yes', '--skip-install', '--disable-git'],
+      import.meta.url,
+    );
 
     const readme = await readFile(join(target, 'README.md'), 'utf8');
     const packageJson = JSON.parse(await readFile(join(target, 'package.json'), 'utf8'));

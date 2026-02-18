@@ -29,6 +29,8 @@ export interface ResolvedPromptOptions {
   packageManager: PackageManager;
   exampleSelection: ExampleSelection;
   yes: boolean;
+  skipInstall: boolean;
+  disableGit: boolean;
 }
 
 export interface PromptDependencies {
@@ -72,6 +74,8 @@ export async function resolvePromptOptions(
     packageManager,
     exampleSelection,
     yes: options.yes,
+    skipInstall: options.skipInstall,
+    disableGit: options.disableGit,
   };
 }
 
