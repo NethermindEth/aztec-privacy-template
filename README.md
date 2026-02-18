@@ -1,104 +1,85 @@
-# Aztec Protocol Privacy Template
+# Aztec Privacy Template
 
-This repository is a starter kit for protocol teams that want to add Aztec privacy to an existing L1 protocol integration.
+Single-repo starter for building Aztec + L1 protocol integrations.
 
-It gives you real end-to-end examples for:
+This repo has two concerns, clearly separated:
 
-- `Aave` style deposit/withdraw flows
-- `Uniswap` style swap flows
-- `Lido` style stake/unstake flows
+1. `packages/create-aztec-privacy-template/`:
+CLI generator that scaffolds new starter projects.
+2. Runtime reference implementation:
+protocol adapters, Solidity portals, and E2E tests under `packages/` + `tests/`.
 
-Each example includes:
-
-- an Aztec contract (private intent + finalize flow)
-- an L1 portal contract (request + execute + completion message)
-- a real E2E test that runs against local Aztec + local L1
-
-## Who this is for
-
-This repo is for protocol builders and smart contract engineers who need a reference architecture for:
-
-- private user intent on Aztec
-- public execution on Ethereum
-- deterministic message passing between both sides
-
-## Core idea
-
-Users keep intent and state transitions private on Aztec, while protocol execution still happens on L1 through a portal.
-
-```text
-User
-  |
-  v
-Aztec Adapter (private intent)
-  |  message_portal(...)
-  v
-L1 Portal (request stored)
-  |  relayer executes
-  v
-Underlying L1 Protocol (Aave/Uniswap/Lido)
-  |
-  |  success/failure handling + L1->L2 message
-  v
-Aztec Adapter finalize_* (consume message, clear pending)
-```
-
-## Repository layout
+## Repository Structure
 
 ```text
 .
+|-- Makefile                           # single entrypoint for all dev/CI commands
 |-- packages/
-|   |-- core/solidity/              # Shared L1 portal primitives
-|   `-- protocols/
-|       |-- aave/
-|       |   |-- aztec/
-|       |   `-- solidity/
-|       |-- uniswap/
-|       |   |-- aztec/
-|       |   `-- solidity/
-|       `-- lido/
-|           |-- aztec/
-|           `-- solidity/
-|-- tests/
-|   |-- aave.ts                     # Real E2E flow
-|   |-- uniswap.ts                  # Real E2E flow
-|   |-- lido.ts                     # Real E2E flow
-|   |-- runtime.ts                  # Local network + deploy helpers
-|   `-- mocks/                      # Solidity test doubles (kept out of protocol code)
-`-- Makefile
+|   |-- core/solidity/                 # shared L1 primitives
+|   |-- protocols/
+|   |   |-- aave/                      # Aave protocol adapter contracts
+|   |   |-- lido/                      # Lido protocol adapter contracts
+|   |   `-- uniswap/                   # Uniswap protocol adapter contracts
+|   `-- create-aztec-privacy-template/ # project generator package
+|-- tests/                             # E2E and runtime helpers
+`-- scripts/                           # shared compile helpers
 ```
 
-## Quick start
+## Quick Start
 
 ```bash
 make install
-make build
-make test-e2e
+make check
+make test
 ```
 
-`make install` verifies required tooling first (`bun`, `node`, `aztec`, `forge`, `cast`, `anvil`) and then installs workspace dependencies.
+## Main Commands
 
-## Protocol entry points
+```bash
+make help
+make install
+make check
+make test
+make build
+make clean
+```
 
-- `packages/protocols/aave/README.md`
-- `packages/protocols/uniswap/README.md`
-- `packages/protocols/lido/README.md`
+Quality:
 
-These READMEs explain each protocol flow, contract responsibilities, and adaptation guidance.
+```bash
+make fmt
+make fmt-check
+make lint
+make typecheck
+```
 
-## Common commands
+E2E:
 
-- `make install` -> verify toolchain + install dependencies
-- `make verify-toolchain` -> check required local binaries
-- `make build` -> compile protocol Aztec artifacts
-- `make test-e2e` -> run real end-to-end tests
-- `make check` -> formatting + lint + core checks
-- `make clean` -> remove build artifacts (`target`, `cache`, `out`, coverage caches)
+```bash
+make test-e2e
+make test-e2e-adapters
+make test-e2e-full
+```
 
-## What this template is not
+Generator:
 
-- not a production-ready bridge or relayer stack
-- not a frontend product
-- not a full protocol implementation
+```bash
+make generator-check
+make generator-e2e-case
+make generator-published-artifact-smoke
+make generator-release-check
+```
 
-It is a minimal but real integration baseline you can clone and adapt.
+## Scaffold with the Generator
+
+```bash
+node packages/create-aztec-privacy-template/dist/cli.js my-app --pm bun --example none --yes
+```
+
+Remote example source overlay (GitHub URL or owner/repo path):
+
+```bash
+node packages/create-aztec-privacy-template/dist/cli.js my-app \
+  --example-source aztecprotocol/aztec-packages/examples/noir-contracts#master \
+  --yes
+```
