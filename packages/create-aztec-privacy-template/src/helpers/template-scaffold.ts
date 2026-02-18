@@ -1,13 +1,9 @@
-import { cp, mkdir, writeFile } from 'node:fs/promises';
+import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import {
-  EXAMPLE_OVERLAY_ORDER,
   type ExampleSelection,
-  OVERLAY_EXAMPLES_DIR,
-  SCAFFOLD_DIR,
   STARTER_PACKAGE_JSON_BASE,
-  TEMPLATE_COPY_ENTRIES,
   type PackageManager,
 } from '../constants.js';
 import {
@@ -15,6 +11,7 @@ import {
   assertNoUnresolvedPlaceholders,
   getPlaceholderMap,
 } from '../placeholders.js';
+import { installTemplatePlan, resolveTemplateInstallPlan } from '../templates/index.js';
 
 export interface ScaffoldTemplateOptions {
   generatorRoot: string;
@@ -33,30 +30,8 @@ export async function scaffoldTemplate(options: ScaffoldTemplateOptions): Promis
     exampleSelection = 'none',
   } = options;
 
-  await mkdir(absoluteTargetPath, { recursive: true });
-
-  for (const entry of TEMPLATE_COPY_ENTRIES) {
-    const sourcePath = join(generatorRoot, SCAFFOLD_DIR, entry);
-    const destinationEntry = entry === 'gitignore' ? '.gitignore' : entry;
-    const destinationPath = join(absoluteTargetPath, destinationEntry);
-
-    await cp(sourcePath, destinationPath, {
-      recursive: true,
-      errorOnExist: true,
-      force: false,
-      preserveTimestamps: true,
-    });
-  }
-
-  for (const overlayName of resolveExampleOverlays(exampleSelection)) {
-    const sourcePath = join(generatorRoot, OVERLAY_EXAMPLES_DIR, overlayName);
-    await cp(sourcePath, absoluteTargetPath, {
-      recursive: true,
-      errorOnExist: false,
-      force: true,
-      preserveTimestamps: true,
-    });
-  }
+  const templatePlan = resolveTemplateInstallPlan(generatorRoot, exampleSelection);
+  await installTemplatePlan(absoluteTargetPath, templatePlan);
 
   const packageJson = {
     ...STARTER_PACKAGE_JSON_BASE,
@@ -72,16 +47,4 @@ export async function scaffoldTemplate(options: ScaffoldTemplateOptions): Promis
   const placeholderMap = getPlaceholderMap(projectName, packageManager);
   await applyPlaceholdersInSelectedFiles(absoluteTargetPath, placeholderMap);
   await assertNoUnresolvedPlaceholders(absoluteTargetPath);
-}
-
-function resolveExampleOverlays(exampleSelection: ExampleSelection): string[] {
-  if (exampleSelection === 'none') {
-    return [];
-  }
-
-  if (exampleSelection === 'all') {
-    return [...EXAMPLE_OVERLAY_ORDER];
-  }
-
-  return [exampleSelection];
 }
