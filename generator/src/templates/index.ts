@@ -53,13 +53,6 @@ export async function installTemplatePlan(
       preserveTimestamps: true,
     });
   }
-
-  const sharedSolhintConfig = join(plan.base.sourceDir, '..', '.solhint.json');
-  await cp(sharedSolhintConfig, join(absoluteTargetPath, '.solhint.json'), {
-    errorOnExist: true,
-    force: false,
-    preserveTimestamps: true,
-  });
 }
 
 function getBaseTemplate(generatorRoot: string): BaseTemplateDefinition {

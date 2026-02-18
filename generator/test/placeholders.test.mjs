@@ -153,7 +153,10 @@ test('scaffoldBaseTemplate applies overlay order deterministically on file colli
     await cp(join(PACKAGE_ROOT, 'scaffold'), join(fakeGeneratorRoot, 'scaffold'), {
       recursive: true,
     });
-    await cp(join(PACKAGE_ROOT, '.solhint.json'), join(fakeGeneratorRoot, '.solhint.json'));
+    await cp(
+      join(PACKAGE_ROOT, 'scaffold', '.solhint.json'),
+      join(fakeGeneratorRoot, 'scaffold', '.solhint.json'),
+    );
     await writeFile(
       join(fakeGeneratorRoot, 'overlays', 'examples', 'aave', 'collision.txt'),
       'aave\n',
