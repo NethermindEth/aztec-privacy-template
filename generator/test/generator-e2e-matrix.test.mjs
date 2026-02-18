@@ -96,7 +96,11 @@ async function runCommand(command, args, cwd) {
       env: process.env,
     });
 
+    let stdout = '';
     let stderr = '';
+    child.stdout.on('data', (chunk) => {
+      stdout += chunk.toString();
+    });
     child.stderr.on('data', (chunk) => {
       stderr += chunk.toString();
     });
@@ -113,7 +117,7 @@ async function runCommand(command, args, cwd) {
 
       reject(
         new Error(
-          `Command "${command} ${args.join(' ')}" exited with code ${code ?? 'unknown'}.\n${stderr}`,
+          `Command "${command} ${args.join(' ')}" exited with code ${code ?? 'unknown'}.\nstdout:\n${stdout}\nstderr:\n${stderr}`,
         ),
       );
     });

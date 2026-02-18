@@ -10,15 +10,22 @@ export interface InstallDependenciesOptions {
 export async function installDependencies(options: InstallDependenciesOptions): Promise<void> {
   const { packageManager, cwd } = options;
   const args = ['install'];
+  const env: NodeJS.ProcessEnv = {
+    ...process.env,
+    NODE_ENV: 'development',
+  };
+
+  if (packageManager === 'yarn') {
+    // Yarn Berry enables immutable installs on CI by default, which blocks
+    // first-time lockfile generation in freshly scaffolded projects.
+    env.YARN_ENABLE_IMMUTABLE_INSTALLS = 'false';
+  }
 
   await new Promise<void>((resolve, reject) => {
     const child = spawn(packageManager, args, {
       cwd,
       stdio: 'inherit',
-      env: {
-        ...process.env,
-        NODE_ENV: 'development',
-      },
+      env,
     });
 
     child.on('close', (code) => {
