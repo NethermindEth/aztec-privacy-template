@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.33;
 
-/* solhint-disable import-path-check */
-import {BasePortal} from "../../../core/solidity/BasePortal.sol";
-import {EscapeHatch} from "../../../core/solidity/EscapeHatch.sol";
+import {BasePortal} from "./BasePortal.sol";
+import {EscapeHatch} from "./EscapeHatch.sol";
 
 /// @title IGenericActionExecutor
 /// @author aztec-privacy-template
@@ -29,9 +28,9 @@ contract GenericPortal is BasePortal, EscapeHatch {
 
     struct FlowRequest {
         address actor;
+        bool exists;
         uint256 amount;
         bytes32 actionHash;
-        bool exists;
     }
 
     /// @notice Request metadata keyed by deterministic message hash.
@@ -59,10 +58,7 @@ contract GenericPortal is BasePortal, EscapeHatch {
     /// @param messageHash Hash for this request.
     /// @param actor Request owner.
     /// @param amount Request amount.
-    /// @param timeoutBlocks Effective timeout used by escape request.
-    event GenericFlowEscaped(
-        bytes32 indexed messageHash, address indexed actor, uint256 amount, uint64 timeoutBlocks
-    );
+    event GenericFlowEscaped(bytes32 indexed messageHash, address indexed actor, uint256 indexed amount);
 
     error InvalidAmount();
     error InvalidAddress();
@@ -140,9 +136,7 @@ contract GenericPortal is BasePortal, EscapeHatch {
         bool success = _execute(sender, amount, actionData);
         if (!success) {
             _registerEscape(messageHash, sender, address(0), amount, timeoutBlocks);
-            emit GenericFlowEscaped(
-                messageHash, sender, amount, timeoutBlocks == 0 ? DEFAULT_ESCAPE_TIMEOUT : timeoutBlocks
-            );
+            emit GenericFlowEscaped(messageHash, sender, amount);
             return;
         }
 

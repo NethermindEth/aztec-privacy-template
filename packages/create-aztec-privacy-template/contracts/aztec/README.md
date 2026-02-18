@@ -1,6 +1,6 @@
 # Generic Adapter (Aztec / Noir)
 
-This package contains a neutral Aztec contract skeleton for private request/finalize flows.
+This folder contains a neutral Aztec contract skeleton for private request/finalize flows.
 
 `main.nr` is intentionally minimal. It gives builders a starting point for:
 

@@ -34,17 +34,31 @@ pub(crate) contract GenericPrivacyAdapter {
     // - emit L2 -> L1 message for portal request matching
     // - mark pending intent so finalize can clear it later
     #[external("private")]
-    fn request_action(asset: Field, amount: u128, action_type: Field, secret_hash: Field) -> pub Field {
+    fn request_action(
+        asset: Field,
+        amount: u128,
+        action_type: Field,
+        secret_hash: Field,
+    ) -> pub Field {
         let caller = self.msg_sender().unwrap();
         assert(amount > 0, "Amount must be greater than zero");
 
         let owner_hash = poseidon2_hash([caller.to_field(), secret_hash]);
         let intent_id = poseidon2_hash([owner_hash, asset, amount as Field, action_type]);
-        let content = poseidon2_hash([intent_id, owner_hash, asset, amount as Field, action_type, secret_hash]);
+        let content = poseidon2_hash([
+            intent_id,
+            owner_hash,
+            asset,
+            amount as Field,
+            action_type,
+            secret_hash,
+        ]);
 
         let portal = self.storage.portal_address.read();
         self.context.message_portal(portal, content);
-        GenericPrivacyAdapter::at(self.context.this_address())._set_pending(intent_id).enqueue(self.context);
+        GenericPrivacyAdapter::at(self.context.this_address())._set_pending(intent_id).enqueue(
+            self.context,
+        );
 
         intent_id
     }
@@ -53,11 +67,18 @@ pub(crate) contract GenericPrivacyAdapter {
     // - consume portal completion message
     // - clear pending intent state
     #[external("private")]
-    fn finalize_action(intent_id: Field, result_amount: u128, secret: Field, message_leaf_index: Field) {
+    fn finalize_action(
+        intent_id: Field,
+        result_amount: u128,
+        secret: Field,
+        message_leaf_index: Field,
+    ) {
         let portal = self.storage.portal_address.read();
         let content = poseidon2_hash([intent_id, result_amount as Field]);
         self.context.consume_l1_to_l2_message(content, secret, portal, message_leaf_index);
-        GenericPrivacyAdapter::at(self.context.this_address())._clear_pending(intent_id).enqueue(self.context);
+        GenericPrivacyAdapter::at(self.context.this_address())._clear_pending(intent_id).enqueue(
+            self.context,
+        );
     }
 
     #[external("public")]

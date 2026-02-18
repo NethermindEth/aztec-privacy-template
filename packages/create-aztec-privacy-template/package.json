@@ -1,0 +1,16 @@
+{
+  "name": "aztec-privacy-starter",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Protocol-agnostic starter for Aztec privacy integrations",
+  "license": "MIT",
+  "scripts": {
+    "fmt": "make fmt",
+    "fmt:check": "make fmt-check",
+    "lint": "make lint",
+    "test": "make test"
+  },
+  "devDependencies": {
+    "solhint": "^6.0.3"
+  }
+}
