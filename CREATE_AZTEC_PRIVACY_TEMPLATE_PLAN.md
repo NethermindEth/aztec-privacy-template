@@ -1,5 +1,9 @@
 # create-aztec-privacy-template Plan
 
+Detailed execution plan:
+
+- `CREATE_AZTEC_PRIVACY_TEMPLATE_IMPLEMENTATION_PLAN.md`
+
 ## Goal
 
 Provide a distributable Node utility so users can run:
@@ -10,12 +14,20 @@ npx create-aztec-privacy-template
 
 and receive a protocol-agnostic starter repo for Aztec privacy integrations.
 
+The generated template must ship with full instructional documentation:
+
+- comprehensive inline contract documentation (NatSpec + implementation guidance comments)
+- comprehensive README documentation (architecture, flow walkthroughs, adaptation steps, and runbook commands)
+
 ## 1) Define the generated repo contract first
 
 - Default output should be protocol-agnostic:
   - `packages/core/solidity` (shared primitives)
   - one generic adapter + portal skeleton
   - minimal tests for request/finalize + escape hatch
+- Documentation requirement in generated output:
+  - contract-level instructional docs embedded inline (NatSpec on contracts/functions/events/errors + key design notes)
+  - top-level and package-level READMEs explaining architecture, lifecycle, extension points, and local dev/test workflow
 - Keep protocol-specific examples optional, not default.
 - Optional examples should be selectable via flags (e.g. `--example aave|lido|uniswap|all`).
 
@@ -83,4 +95,3 @@ Scaffold `packages/create-aztec-privacy-template` with:
 - CLI entrypoint + argument parsing
 - base template extraction
 - first working `npx` path
-
