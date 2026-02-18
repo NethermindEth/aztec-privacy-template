@@ -14,6 +14,7 @@ yarn.lock
 target/
 out/
 cache/
+dist/
 **/target/
 **/out/
 **/cache/
