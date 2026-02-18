@@ -1,20 +1,22 @@
 import type { ExampleSelection, PackageManager } from '../constants.js';
-import { assertExampleSelection, assertPackageManager } from '../validate.js';
+import { assertExampleSelection, assertExampleSource, assertPackageManager } from '../validate.js';
 
 export interface CliOptions {
   projectArg?: string;
   packageManager: PackageManager;
   exampleSelection: ExampleSelection;
+  exampleSource?: string;
   yes: boolean;
   skipInstall: boolean;
   disableGit: boolean;
   packageManagerProvided: boolean;
   exampleSelectionProvided: boolean;
+  exampleSourceProvided: boolean;
 }
 
 export function printUsage(): void {
   console.log(
-    'Usage: create-aztec-privacy-template <project-name-or-path> [--pm <bun|npm|pnpm|yarn>] [--example <none|aave|lido|uniswap|all>] [--yes] [--skip-install] [--disable-git]',
+    'Usage: create-aztec-privacy-template <project-name-or-path> [--pm <bun|npm|pnpm|yarn>] [--example <none|aave|lido|uniswap|all>] [--example-source <github-url|owner/repo[/path][#ref]>] [--yes] [--skip-install] [--disable-git]',
   );
 }
 
@@ -22,11 +24,13 @@ export function parseArgs(argv: string[]): CliOptions {
   let projectArg = '';
   let packageManager: PackageManager = 'bun';
   let exampleSelection: ExampleSelection = 'none';
+  let exampleSource: string | undefined;
   let yes = false;
   let skipInstall = false;
   let disableGit = false;
   let packageManagerProvided = false;
   let exampleSelectionProvided = false;
+  let exampleSourceProvided = false;
 
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
@@ -93,6 +97,27 @@ export function parseArgs(argv: string[]): CliOptions {
       continue;
     }
 
+    if (arg === '--example-source') {
+      const value = argv[i + 1];
+      if (!value) {
+        throw new Error('--example-source requires a value');
+      }
+
+      assertExampleSource(value);
+      exampleSource = value;
+      exampleSourceProvided = true;
+      i += 1;
+      continue;
+    }
+
+    if (arg.startsWith('--example-source=')) {
+      const value = arg.slice('--example-source='.length);
+      assertExampleSource(value);
+      exampleSource = value;
+      exampleSourceProvided = true;
+      continue;
+    }
+
     if (arg.startsWith('-')) {
       throw new Error(`Unknown option: ${arg}`);
     }
@@ -108,10 +133,12 @@ export function parseArgs(argv: string[]): CliOptions {
     projectArg: projectArg || undefined,
     packageManager,
     exampleSelection,
+    exampleSource,
     yes,
     skipInstall,
     disableGit,
     packageManagerProvided,
     exampleSelectionProvided,
+    exampleSourceProvided,
   };
 }

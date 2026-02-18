@@ -14,6 +14,7 @@ export async function run(argv: string[], importMetaUrl: string): Promise<void> 
     projectArg: args.projectArg,
     packageManager: args.packageManager,
     exampleSelection: args.exampleSelection,
+    exampleSource: args.exampleSource,
     skipInstall: args.skipInstall,
     disableGit: args.disableGit,
   });
@@ -25,6 +26,19 @@ export async function run(argv: string[], importMetaUrl: string): Promise<void> 
     console.log('Skipped git initialization.');
   } else {
     console.log('Git initialization was skipped (git unavailable or commit failed).');
+  }
+
+  if (result.remoteExample) {
+    if (result.remoteExample.applied) {
+      console.log(`Applied remote example source: ${result.remoteExample.source}`);
+    } else {
+      const reason = result.remoteExample.fallbackReason
+        ? ` (${result.remoteExample.fallbackReason})`
+        : '';
+      console.log(
+        `Remote example source unavailable${reason}. Falling back to local built-in examples.`,
+      );
+    }
   }
 
   console.log('\nNext steps:');

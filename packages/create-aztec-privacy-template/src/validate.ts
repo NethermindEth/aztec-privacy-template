@@ -3,6 +3,7 @@ import { existsSync, readdirSync, statSync } from 'node:fs';
 
 import type { ExampleSelection, PackageManager } from './constants.js';
 import { SUPPORTED_EXAMPLE_SELECTIONS, SUPPORTED_PACKAGE_MANAGERS } from './constants.js';
+import { parseGithubExampleSource } from './helpers/examples.js';
 
 export interface ResolvedProjectTarget {
   absoluteTargetPath: string;
@@ -63,4 +64,8 @@ export function assertExampleSelection(example: string): asserts example is Exam
   throw new Error(
     `Unsupported example "${example}". Supported values: ${SUPPORTED_EXAMPLE_SELECTIONS.join(', ')}`,
   );
+}
+
+export function assertExampleSource(exampleSource: string): void {
+  parseGithubExampleSource(exampleSource);
 }

@@ -28,6 +28,7 @@ export interface ResolvedPromptOptions {
   projectArg: string;
   packageManager: PackageManager;
   exampleSelection: ExampleSelection;
+  exampleSource?: string;
   yes: boolean;
   skipInstall: boolean;
   disableGit: boolean;
@@ -73,6 +74,7 @@ export async function resolvePromptOptions(
     projectArg,
     packageManager,
     exampleSelection,
+    exampleSource: options.exampleSource,
     yes: options.yes,
     skipInstall: options.skipInstall,
     disableGit: options.disableGit,
