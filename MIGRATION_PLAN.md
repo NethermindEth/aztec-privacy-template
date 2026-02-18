@@ -187,7 +187,7 @@ Exit criteria:
 
 1. Example scaffolding is robust for both local and remote sources.
 
-## Phase 6: CI and Release Hardening
+## Phase 6: CI and Release Hardening **COMPLETE**
 
 Tasks:
 
