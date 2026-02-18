@@ -118,14 +118,14 @@ test-core:
 	@if command -v forge >/dev/null 2>&1; then (cd packages/core/solidity && forge test); else echo "forge not installed"; exit 1; fi
 
 test-e2e:
-	@node --import tsx --test --test-concurrency=1 --test-reporter=spec tests/aave.ts tests/lido.ts tests/uniswap.ts
+	@node --import tsx --test --test-concurrency=1 --test-reporter=spec tests/e2e/aave.e2e.ts tests/e2e/lido.e2e.ts tests/e2e/uniswap.e2e.ts
 
 test-e2e-adapters:
 	@ADAPTER_MESSAGE_READY_TIMEOUT_MS=$(ADAPTER_MESSAGE_READY_TIMEOUT_MS) \
 	ADAPTER_FINALIZE_RETRY_TIMEOUT_MS=$(ADAPTER_FINALIZE_RETRY_TIMEOUT_MS) \
 	ADAPTER_POLL_INTERVAL_MS=$(ADAPTER_POLL_INTERVAL_MS) \
 	ADAPTER_FAIL_FAST=$(ADAPTER_FAIL_FAST) \
-	node --import tsx --test --test-concurrency=1 --test-reporter=spec tests/aztec-adapters.ts
+	node --import tsx --test --test-concurrency=1 --test-reporter=spec tests/e2e/adapters.e2e.ts
 
 test-e2e-full: test-e2e test-e2e-adapters
 

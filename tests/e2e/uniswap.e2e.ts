@@ -1,6 +1,6 @@
 import { strict as assert } from 'node:assert';
 import test from 'node:test';
-import { type ProtocolFlowSpec, runProtocolE2EHappyPath } from './e2e-flow';
+import { type ProtocolFlowSpec, runProtocolE2EHappyPath } from '../helpers/e2e-flow';
 import {
   L1_RPC_URL,
   type LocalRuntime,
@@ -17,7 +17,7 @@ import {
   provisionPrivateTokenBalance,
   run,
   stopProcess,
-} from './runtime';
+} from '../helpers/runtime';
 
 const PROTOCOL_ID = `0x${'22'.repeat(32)}`;
 const UNISWAP_AZTEC_DIR = 'packages/protocols/uniswap/aztec';

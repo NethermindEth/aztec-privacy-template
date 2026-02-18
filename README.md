@@ -21,7 +21,10 @@ protocol adapters, Solidity portals, and E2E tests under `packages/` + `tests/`.
 |   |   |-- lido/                      # Lido protocol adapter contracts
 |   |   `-- uniswap/                   # Uniswap protocol adapter contracts
 |-- generator/                         # project generator package
-|-- tests/                             # E2E and runtime helpers
+|-- tests/
+|   |-- e2e/                           # protocol and adapter E2E suites
+|   |-- helpers/                       # E2E runtime/test harness utilities
+|   `-- mocks/                         # Solidity mocks used by E2E tests
 `-- scripts/                           # shared compile helpers
 ```
 

@@ -25,7 +25,7 @@ import {
   stopProcess,
   type LocalRuntime,
   USER_PRIVATE_KEY,
-} from './runtime';
+} from '../helpers/runtime';
 
 const AAVE_AZTEC_DIR = 'packages/protocols/aave/aztec';
 const LIDO_AZTEC_DIR = 'packages/protocols/lido/aztec';
