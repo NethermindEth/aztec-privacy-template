@@ -6,7 +6,7 @@ import { installExampleSource } from './helpers/examples.js';
 import { tryGitInit } from './helpers/git.js';
 import { installDependencies } from './helpers/install.js';
 import { runPostInitHooks } from './helpers/post-init.js';
-import { scaffoldBaseTemplate } from './scaffold.js';
+import { scaffoldTemplate } from './helpers/template-scaffold.js';
 import { assertTargetPathSafe, resolveProjectTarget } from './validate.js';
 
 export interface CreateAppOptions {
@@ -57,7 +57,7 @@ export async function createApp(
   const { absoluteTargetPath, projectName } = resolveProjectTarget(projectArg);
   assertTargetPathSafe(absoluteTargetPath);
 
-  await scaffoldBaseTemplate({
+  await scaffoldTemplate({
     generatorRoot,
     absoluteTargetPath,
     projectName,

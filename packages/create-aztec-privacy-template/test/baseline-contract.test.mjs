@@ -10,7 +10,7 @@ import {
   SUPPORTED_EXAMPLE_SELECTIONS,
   SUPPORTED_PACKAGE_MANAGERS,
 } from '../dist/constants.js';
-import { scaffoldBaseTemplate } from '../dist/scaffold.js';
+import { scaffoldTemplate as scaffoldBaseTemplate } from '../dist/helpers/template-scaffold.js';
 
 const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SNAPSHOT_ROOT = join(PACKAGE_ROOT, 'test', 'fixtures', 'baseline-structure');

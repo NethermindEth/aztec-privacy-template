@@ -11,7 +11,6 @@ export const SUPPORTED_EXAMPLE_SELECTIONS = ['none', ...EXAMPLE_OVERLAY_ORDER, '
 
 export const TEMPLATE_COPY_ENTRIES = [
   'gitignore',
-  '.solhint.json',
   'Makefile',
   'README.md',
   'contracts',

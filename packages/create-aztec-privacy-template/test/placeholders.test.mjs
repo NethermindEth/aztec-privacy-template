@@ -6,7 +6,7 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import { applyPlaceholdersInSelectedFiles, getPlaceholderMap } from '../dist/placeholders.js';
-import { scaffoldBaseTemplate } from '../dist/scaffold.js';
+import { scaffoldTemplate as scaffoldBaseTemplate } from '../dist/helpers/template-scaffold.js';
 
 const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -153,6 +153,7 @@ test('scaffoldBaseTemplate applies overlay order deterministically on file colli
     await cp(join(PACKAGE_ROOT, 'scaffold'), join(fakeGeneratorRoot, 'scaffold'), {
       recursive: true,
     });
+    await cp(join(PACKAGE_ROOT, '.solhint.json'), join(fakeGeneratorRoot, '.solhint.json'));
     await writeFile(
       join(fakeGeneratorRoot, 'overlays', 'examples', 'aave', 'collision.txt'),
       'aave\n',
