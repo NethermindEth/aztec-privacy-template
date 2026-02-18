@@ -2,7 +2,7 @@ SHELL := /usr/bin/env bash
 
 BUN := bun
 BIOME := bunx biome
-SOLHINT := bunx solhint
+SOLHINT := ./node_modules/.bin/solhint
 BIOME_CONFIG := --config-path .biome.json
 SOLIDITY_FILES := $(shell find packages -type f -name '*.sol' \
 	-not -name '*.t.sol' \
@@ -81,11 +81,21 @@ fmt:
 	else \
 		echo "No Solidity files found; skipping forge fmt."; \
 	fi
-	@echo "Formatting Noir files with aztec fmt..."
-	@for dir in $(AZTEC_CONTRACT_DIRS); do \
-		echo "Formatting $$dir"; \
-		(cd $$dir && aztec fmt); \
-	done
+	@echo "Formatting Noir files..."
+	@noir_fmt_cmd=""; \
+	if aztec --help 2>/dev/null | grep -Eq '^[[:space:]]+fmt([[:space:]]|:)' ; then \
+		noir_fmt_cmd="aztec fmt"; \
+	elif command -v nargo >/dev/null 2>&1; then \
+		noir_fmt_cmd="nargo fmt"; \
+	fi; \
+	if [ -z "$$noir_fmt_cmd" ]; then \
+		echo "No Noir formatter available (aztec fmt or nargo fmt); skipping Noir format."; \
+	else \
+		for dir in $(AZTEC_CONTRACT_DIRS); do \
+			echo "Formatting $$dir with $$noir_fmt_cmd"; \
+			(cd $$dir && $$noir_fmt_cmd); \
+		done; \
+	fi
 
 fmt-check:
 	@echo "Checking Biome formatting..."
@@ -96,18 +106,32 @@ fmt-check:
 	else \
 		echo "No Solidity files found; skipping forge fmt --check."; \
 	fi
-	@echo "Checking Noir formatting with aztec fmt --check..."
-	@for dir in $(AZTEC_CONTRACT_DIRS); do \
-		echo "Checking $$dir"; \
-		(cd $$dir && aztec fmt --check); \
-	done
+	@echo "Checking Noir formatting..."
+	@noir_fmt_check_cmd=""; \
+	if aztec --help 2>/dev/null | grep -Eq '^[[:space:]]+fmt([[:space:]]|:)' ; then \
+		noir_fmt_check_cmd="aztec fmt --check"; \
+	elif command -v nargo >/dev/null 2>&1 && nargo fmt --help 2>/dev/null | grep -q -- '--check'; then \
+		noir_fmt_check_cmd="nargo fmt --check"; \
+	fi; \
+	if [ -z "$$noir_fmt_check_cmd" ]; then \
+		echo "No Noir format checker available (aztec fmt --check or nargo fmt --check); skipping Noir format check."; \
+	else \
+		for dir in $(AZTEC_CONTRACT_DIRS); do \
+			echo "Checking $$dir with $$noir_fmt_check_cmd"; \
+			(cd $$dir && $$noir_fmt_check_cmd); \
+		done; \
+	fi
 
 lint:
 	@echo "Running biome lints..."
 	@$(BIOME) lint $(BIOME_CONFIG) $(BIOME_TARGET)
 	@echo "Running solhint..."
+	@if [ ! -x "$(SOLHINT)" ]; then \
+		echo "solhint is missing; installing workspace dependencies first..."; \
+		$(BUN) install; \
+	fi
 	@if [ -n "$(SOLIDITY_FILES)" ]; then \
-		NO_UPDATE_NOTIFIER=1 $(SOLHINT) $(SOLIDITY_FILES); \
+		$(SOLHINT) --disc $(SOLIDITY_FILES); \
 	else \
 		echo "No solidity files found; skipping solhint."; \
 	fi
