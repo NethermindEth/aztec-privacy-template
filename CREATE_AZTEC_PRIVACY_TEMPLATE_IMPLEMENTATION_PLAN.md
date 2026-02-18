@@ -136,7 +136,7 @@ packages/create-aztec-privacy-template/
 
 1. End-to-end base scaffolding works locally with one command.
 
-## Phase 3: Placeholder replacement + project metadata
+## Phase 3: Placeholder replacement + project metadata **COMPLETE**
 
 ### Changes
 
