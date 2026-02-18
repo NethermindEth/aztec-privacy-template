@@ -1,9 +1,12 @@
 SHELL := /usr/bin/env bash
+.DEFAULT_GOAL := help
 
 BUN := bun
 BIOME := bunx biome
 SOLHINT := ./node_modules/.bin/solhint
 BIOME_CONFIG := --config-path .biome.json
+GENERATOR_DIR := packages/create-aztec-privacy-template
+GENERATOR_SCAFFOLD_DIR := $(GENERATOR_DIR)/scaffold
 SOLIDITY_FILES := $(shell find packages -type f -name '*.sol' \
 	-not -name '*.t.sol' \
 	-not -path '*/test/*' \
@@ -11,6 +14,7 @@ SOLIDITY_FILES := $(shell find packages -type f -name '*.sol' \
 
 WORKDIRS := packages/core packages/protocols/aave packages/protocols/uniswap packages/protocols/lido tests tests/e2e
 AZTEC_CONTRACT_DIRS := packages/protocols/aave/aztec packages/protocols/uniswap/aztec packages/protocols/lido/aztec
+NOIR_FMT_DIRS := $(AZTEC_CONTRACT_DIRS) $(GENERATOR_SCAFFOLD_DIR)/contracts/aztec
 BIOME_TARGET := .
 SOLIDITY_FMT_FILES := $(shell find packages tests -type f -name '*.sol' -not -path '*/cache/*' -not -path '*/out/*' 2>/dev/null)
 CORE_SOL_TESTS := $(shell find packages/core/solidity -type f -name "*.t.sol" 2>/dev/null)
@@ -21,7 +25,7 @@ ADAPTER_FINALIZE_RETRY_TIMEOUT_MS ?= 90000
 ADAPTER_POLL_INTERVAL_MS ?= 500
 ADAPTER_FAIL_FAST ?= 1
 
-.PHONY: help install verify-toolchain fmt fmt-check lint typecheck test test-unit test-e2e test-e2e-fast test-e2e-adapters test-e2e-full build build-aztec clean check test-core lint-core protocol-aave protocol-uniswap protocol-lido build-protocol-% dev-sandbox-up dev-sandbox-down
+.PHONY: help install verify-toolchain fmt fmt-check lint typecheck test test-unit test-e2e test-e2e-fast test-e2e-adapters test-e2e-full build build-aztec clean check test-core lint-core protocol-aave protocol-uniswap protocol-lido build-protocol-% dev-sandbox-up dev-sandbox-down generator-install generator-typecheck generator-build generator-test scaffold-help scaffold-check scaffold-test scaffold-build
 
 help:
 	@printf "Available targets:\n"
@@ -48,6 +52,14 @@ help:
 	@printf "  make protocol-lido   Build Lido protocol artifacts\n"
 	@printf "  make dev-sandbox-up  Start local E2E services\n"
 	@printf "  make dev-sandbox-down Stop local E2E services\n"
+	@printf "\nGenerator\n"
+	@printf "  make generator-typecheck Type-check create-aztec-privacy-template\n"
+	@printf "  make generator-build Build create-aztec-privacy-template\n"
+	@printf "  make generator-test  Run generator unit/smoke tests\n"
+	@printf "  make scaffold-help   Show scaffolded-project Make targets\n"
+	@printf "  make scaffold-check  Run scaffold checks from template source\n"
+	@printf "  make scaffold-test   Run scaffold tests from template source\n"
+	@printf "  make scaffold-build  Build scaffold artifacts from template source\n"
 
 verify-toolchain:
 	@echo "Checking required toolchain..."
@@ -91,7 +103,7 @@ fmt:
 	if [ -z "$$noir_fmt_cmd" ]; then \
 		echo "No Noir formatter available (aztec fmt or nargo fmt); skipping Noir format."; \
 	else \
-		for dir in $(AZTEC_CONTRACT_DIRS); do \
+		for dir in $(NOIR_FMT_DIRS); do \
 			echo "Formatting $$dir with $$noir_fmt_cmd"; \
 			(cd $$dir && $$noir_fmt_cmd); \
 		done; \
@@ -116,7 +128,7 @@ fmt-check:
 	if [ -z "$$noir_fmt_check_cmd" ]; then \
 		echo "No Noir format checker available (aztec fmt --check or nargo fmt --check); skipping Noir format check."; \
 	else \
-		for dir in $(AZTEC_CONTRACT_DIRS); do \
+		for dir in $(NOIR_FMT_DIRS); do \
 			echo "Checking $$dir with $$noir_fmt_check_cmd"; \
 			(cd $$dir && $$noir_fmt_check_cmd); \
 		done; \
@@ -143,6 +155,7 @@ typecheck:
 		$(BUN) install; \
 	fi
 	@$(BUN) run typecheck
+	@$(MAKE) generator-typecheck
 
 test:
 	@$(MAKE) test-unit
@@ -236,6 +249,7 @@ check:
 	@$(MAKE) lint
 	@$(MAKE) typecheck
 	@$(MAKE) test-core
+	@$(MAKE) generator-test
 
 test-core:
 	@echo "Running core Solidity tests..."
@@ -257,3 +271,33 @@ dev-sandbox-up:
 
 dev-sandbox-down:
 	@echo "Sandbox shutdown is deferred to Phase 6."
+
+generator-install:
+	@if [ ! -d "$(GENERATOR_DIR)/node_modules" ]; then \
+		echo "Installing generator dependencies..."; \
+		(cd $(GENERATOR_DIR) && $(BUN) install); \
+	fi
+
+generator-typecheck: generator-install
+	@echo "Type-checking generator package..."
+	@(cd $(GENERATOR_DIR) && $(BUN) run typecheck)
+
+generator-build: generator-install
+	@echo "Building generator package..."
+	@(cd $(GENERATOR_DIR) && $(BUN) run build)
+
+generator-test: generator-install
+	@echo "Running generator tests..."
+	@(cd $(GENERATOR_DIR) && $(BUN) run test)
+
+scaffold-help:
+	@$(MAKE) -C $(GENERATOR_SCAFFOLD_DIR) help
+
+scaffold-check:
+	@$(MAKE) -C $(GENERATOR_SCAFFOLD_DIR) check
+
+scaffold-test:
+	@$(MAKE) -C $(GENERATOR_SCAFFOLD_DIR) test
+
+scaffold-build:
+	@$(MAKE) -C $(GENERATOR_SCAFFOLD_DIR) build
