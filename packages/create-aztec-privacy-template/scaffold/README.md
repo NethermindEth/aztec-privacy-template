@@ -1,4 +1,4 @@
-# Aztec Privacy Starter
+# __PROJECT_NAME__
 
 This repository is a protocol-agnostic starter for building Aztec privacy flows.
 
@@ -43,7 +43,8 @@ Aztec Generic Adapter (private finalize_*)
 ## Quick start
 
 ```bash
-make install
+cd __PROJECT_NAME__
+__INSTALL_COMMAND__
 make check
 make test
 ```

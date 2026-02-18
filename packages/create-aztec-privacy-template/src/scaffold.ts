@@ -5,18 +5,26 @@ import {
 	SCAFFOLD_DIR,
 	STARTER_PACKAGE_JSON_BASE,
 	TEMPLATE_COPY_ENTRIES,
+	type PackageManager,
 } from "./constants.js";
+import {
+	applyPlaceholdersInSelectedFiles,
+	assertNoUnresolvedPlaceholders,
+	getPlaceholderMap,
+} from "./placeholders.js";
 
 export interface ScaffoldOptions {
 	generatorRoot: string;
 	absoluteTargetPath: string;
 	projectName: string;
+	packageManager: PackageManager;
 }
 
 export async function scaffoldBaseTemplate(
 	options: ScaffoldOptions,
 ): Promise<void> {
-	const { generatorRoot, absoluteTargetPath, projectName } = options;
+	const { generatorRoot, absoluteTargetPath, projectName, packageManager } =
+		options;
 
 	await mkdir(absoluteTargetPath, { recursive: true });
 
@@ -43,4 +51,8 @@ export async function scaffoldBaseTemplate(
 		`${JSON.stringify(packageJson, null, 2)}\n`,
 		"utf8",
 	);
+
+	const placeholderMap = getPlaceholderMap(projectName, packageManager);
+	await applyPlaceholdersInSelectedFiles(absoluteTargetPath, placeholderMap);
+	await assertNoUnresolvedPlaceholders(absoluteTargetPath);
 }

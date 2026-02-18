@@ -18,6 +18,8 @@ export const TEMPLATE_COPY_ENTRIES = [
 	"scripts",
 ] as const;
 
+export const PLACEHOLDER_TEXT_FILES = ["README.md"] as const;
+
 export const STARTER_PACKAGE_JSON_BASE = {
 	private: true,
 	version: "0.1.0",

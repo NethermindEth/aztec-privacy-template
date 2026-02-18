@@ -95,6 +95,7 @@ async function main(): Promise<void> {
 		generatorRoot,
 		absoluteTargetPath,
 		projectName,
+		packageManager: args.packageManager,
 	});
 
 	const displayPath =
