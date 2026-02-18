@@ -7,7 +7,11 @@
   "bin": {
     "create-aztec-privacy-template": "dist/cli.js"
   },
-  "files": ["dist", "scaffold", "overlays"],
+  "files": [
+    "dist",
+    "scaffold",
+    "overlays"
+  ],
   "scripts": {
     "fmt": "bunx biome format --config-path ../.biome.json --write src test",
     "fmt:check": "bunx biome format --config-path ../.biome.json src test",

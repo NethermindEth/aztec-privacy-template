@@ -185,7 +185,7 @@ function spawnAztecStartProcess(
 
 async function waitForAztecRuntimeReady(
   process: ChildProcessWithoutNullStreams,
-  logs: string[],
+  _logs: string[],
   timeoutMs: number,
 ): Promise<'ready' | 'exited' | 'timeout'> {
   const deadline = Date.now() + timeoutMs;

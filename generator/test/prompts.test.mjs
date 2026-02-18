@@ -11,7 +11,7 @@ function createDependencies({
 } = {}) {
   const askedPrompts = [];
   let answerIndex = 0;
-  let savedPreferences = undefined;
+  let savedPreferences;
 
   return {
     deps: {
