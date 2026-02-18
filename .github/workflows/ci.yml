@@ -16,6 +16,38 @@ env:
   AZTEC_VERSION: "3.0.0-devnet.6-patch.1"
 
 jobs:
+  generator-baseline-matrix:
+    name: Generator baseline (${{ matrix.pm }} / ${{ matrix.example }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        pm: [bun, npm, pnpm, yarn]
+        example: [none, aave, lido, uniswap, all]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install generator dependencies
+        run: make generator-install
+
+      - name: Build generator package
+        run: make generator-build
+
+      - name: Verify generator baseline contract
+        env:
+          CAPT_MATRIX_PM: ${{ matrix.pm }}
+          CAPT_MATRIX_EXAMPLE: ${{ matrix.example }}
+        run: |
+          cd packages/create-aztec-privacy-template
+          node --test test/baseline-contract.test.mjs
+
   quality-and-contract-build:
     name: Quality + Solidity + Aztec compile
     runs-on: ubuntu-latest
