@@ -3,7 +3,12 @@ import test from 'node:test';
 
 import { resolvePromptOptions } from '../dist/prompts.js';
 
-function createDependencies({ answers = [], interactive = true, preferences = {} } = {}) {
+function createDependencies({
+  answers = [],
+  interactive = true,
+  preferences = {},
+  availablePackageManagers = ['bun', 'npm', 'pnpm', 'yarn'],
+} = {}) {
   const askedPrompts = [];
   let answerIndex = 0;
   let savedPreferences = undefined;
@@ -21,13 +26,15 @@ function createDependencies({ answers = [], interactive = true, preferences = {}
       savePreferences: async (value) => {
         savedPreferences = value;
       },
+      isPackageManagerAvailable: (packageManager) =>
+        availablePackageManagers.includes(packageManager),
     },
     getAskedPrompts: () => askedPrompts,
     getSavedPreferences: () => savedPreferences,
   };
 }
 
-test('--yes resolves omitted options from saved preferences/defaults without prompting', async () => {
+test('--yes resolves omitted options from fixed defaults without prompting', async () => {
   const mock = createDependencies({
     interactive: false,
     preferences: {
@@ -39,7 +46,7 @@ test('--yes resolves omitted options from saved preferences/defaults without pro
   const resolved = await resolvePromptOptions(
     {
       projectArg: undefined,
-      packageManager: 'bun',
+      packageManager: 'npm',
       exampleSelection: 'none',
       yes: true,
       skipInstall: false,
@@ -51,14 +58,14 @@ test('--yes resolves omitted options from saved preferences/defaults without pro
   );
 
   assert.equal(resolved.projectArg, 'my-aztec-app');
-  assert.equal(resolved.packageManager, 'pnpm');
-  assert.equal(resolved.exampleSelection, 'uniswap');
+  assert.equal(resolved.packageManager, 'npm');
+  assert.equal(resolved.exampleSelection, 'none');
   assert.equal(resolved.skipInstall, false);
   assert.equal(resolved.disableGit, false);
   assert.deepEqual(mock.getAskedPrompts(), []);
   assert.deepEqual(mock.getSavedPreferences(), {
-    packageManager: 'pnpm',
-    exampleSelection: 'uniswap',
+    packageManager: 'npm',
+    exampleSelection: 'none',
   });
 });
 
@@ -71,7 +78,7 @@ test('interactive mode prompts for omitted project, package manager, and example
   const resolved = await resolvePromptOptions(
     {
       projectArg: undefined,
-      packageManager: 'bun',
+      packageManager: 'npm',
       exampleSelection: 'none',
       yes: false,
       skipInstall: false,
@@ -102,7 +109,7 @@ test('non-interactive mode without --yes fails when project argument is missing'
       resolvePromptOptions(
         {
           projectArg: undefined,
-          packageManager: 'bun',
+          packageManager: 'npm',
           exampleSelection: 'none',
           yes: false,
           skipInstall: false,
@@ -122,7 +129,7 @@ test('non-interactive mode without --yes uses defaults for omitted optional flag
   const resolved = await resolvePromptOptions(
     {
       projectArg: 'ci-app',
-      packageManager: 'bun',
+      packageManager: 'npm',
       exampleSelection: 'none',
       yes: false,
       packageManagerProvided: false,
@@ -132,12 +139,58 @@ test('non-interactive mode without --yes uses defaults for omitted optional flag
   );
 
   assert.equal(resolved.projectArg, 'ci-app');
-  assert.equal(resolved.packageManager, 'bun');
+  assert.equal(resolved.packageManager, 'npm');
   assert.equal(resolved.exampleSelection, 'none');
   assert.deepEqual(mock.getAskedPrompts(), []);
 });
 
-test('non-interactive mode uses saved preferences for omitted optional flags', async () => {
+test('non-interactive mode fails if default package manager is unavailable', async () => {
+  const mock = createDependencies({
+    interactive: false,
+    availablePackageManagers: ['pnpm', 'yarn'],
+  });
+
+  await assert.rejects(
+    () =>
+      resolvePromptOptions(
+        {
+          projectArg: 'ci-app',
+          packageManager: 'npm',
+          exampleSelection: 'none',
+          yes: false,
+          packageManagerProvided: false,
+          exampleSelectionProvided: false,
+        },
+        mock.deps,
+      ),
+    /Default package manager "npm" is not available on PATH/,
+  );
+});
+
+test('explicit unavailable package manager fails early with clear message', async () => {
+  const mock = createDependencies({
+    interactive: false,
+    availablePackageManagers: ['npm', 'pnpm', 'yarn'],
+  });
+
+  await assert.rejects(
+    () =>
+      resolvePromptOptions(
+        {
+          projectArg: 'ci-app',
+          packageManager: 'bun',
+          exampleSelection: 'none',
+          yes: false,
+          packageManagerProvided: true,
+          exampleSelectionProvided: false,
+        },
+        mock.deps,
+      ),
+    /Package manager "bun" is not available on PATH/,
+  );
+});
+
+test('saved preferences do not override fixed defaults', async () => {
   const mock = createDependencies({
     interactive: false,
     preferences: {
@@ -149,7 +202,7 @@ test('non-interactive mode uses saved preferences for omitted optional flags', a
   const resolved = await resolvePromptOptions(
     {
       projectArg: 'ci-app',
-      packageManager: 'bun',
+      packageManager: 'npm',
       exampleSelection: 'none',
       yes: false,
       packageManagerProvided: false,
@@ -158,8 +211,8 @@ test('non-interactive mode uses saved preferences for omitted optional flags', a
     mock.deps,
   );
 
-  assert.equal(resolved.packageManager, 'yarn');
-  assert.equal(resolved.exampleSelection, 'all');
+  assert.equal(resolved.packageManager, 'npm');
+  assert.equal(resolved.exampleSelection, 'none');
   assert.deepEqual(mock.getAskedPrompts(), []);
 });
 

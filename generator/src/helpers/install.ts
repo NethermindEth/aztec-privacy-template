@@ -35,6 +35,16 @@ export async function installDependencies(options: InstallDependenciesOptions): 
     });
 
     child.on('error', (error) => {
+      const spawnError = error as NodeJS.ErrnoException;
+      if (spawnError.code === 'ENOENT') {
+        reject(
+          new Error(
+            `Package manager "${packageManager}" is not installed or not available on PATH. Install it or rerun with --pm <bun|npm|pnpm|yarn>.`,
+          ),
+        );
+        return;
+      }
+
       reject(new Error(`Failed to spawn installer ${packageManager}: ${error.message}`));
     });
   });

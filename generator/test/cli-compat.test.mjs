@@ -10,7 +10,7 @@ import { parseArgs } from '../dist/helpers/cli-options.js';
 test('parseArgs preserves legacy flag behavior and defaults', () => {
   assert.deepEqual(parseArgs(['my-app']), {
     projectArg: 'my-app',
-    packageManager: 'bun',
+    packageManager: 'npm',
     exampleSelection: 'none',
     exampleSource: undefined,
     yes: false,
@@ -49,7 +49,7 @@ test('parseArgs preserves legacy flag behavior and defaults', () => {
 
   assert.deepEqual(parseArgs([]), {
     projectArg: undefined,
-    packageManager: 'bun',
+    packageManager: 'npm',
     exampleSelection: 'none',
     exampleSource: undefined,
     yes: false,
@@ -62,7 +62,7 @@ test('parseArgs preserves legacy flag behavior and defaults', () => {
 
   assert.deepEqual(parseArgs(['my-app', '--disable-git']), {
     projectArg: 'my-app',
-    packageManager: 'bun',
+    packageManager: 'npm',
     exampleSelection: 'none',
     exampleSource: undefined,
     yes: false,
@@ -77,7 +77,7 @@ test('parseArgs preserves legacy flag behavior and defaults', () => {
     parseArgs(['my-app', '--example-source', 'aztecprotocol/aztec-packages/examples']),
     {
       projectArg: 'my-app',
-      packageManager: 'bun',
+      packageManager: 'npm',
       exampleSelection: 'none',
       exampleSource: 'aztecprotocol/aztec-packages/examples',
       yes: false,
@@ -101,7 +101,7 @@ test('parseArgs rejects unsupported or malformed inputs', () => {
 });
 
 test('run scaffolds successfully through new index/create-app boundary', async () => {
-  const projectRoot = await mkdtemp(join(tmpdir(), 'capt-phase1-run-'));
+  const projectRoot = await mkdtemp(join(tmpdir(), 'capt-cli-run-'));
   const target = join(projectRoot, 'legacy-flags-app');
   const originalLog = console.log;
 

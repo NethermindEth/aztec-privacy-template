@@ -22,7 +22,7 @@ export function printUsage(): void {
 
 export function parseArgs(argv: string[]): CliOptions {
   let projectArg = '';
-  let packageManager: PackageManager = 'bun';
+  let packageManager: PackageManager = 'npm';
   let exampleSelection: ExampleSelection = 'none';
   let exampleSource: string | undefined;
   let yes = false;

@@ -76,7 +76,7 @@ make generator-release-check
 ## Scaffold with the Generator
 
 ```bash
-node generator/dist/cli.js my-app --pm bun --example none --yes
+node generator/dist/cli.js my-app --yes
 ```
 
 Remote example source overlay (GitHub URL or owner/repo path):

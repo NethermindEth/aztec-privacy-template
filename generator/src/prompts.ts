@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { createInterface } from 'node:readline/promises';
+import { spawnSync } from 'node:child_process';
 import process from 'node:process';
 
 import {
@@ -39,6 +40,7 @@ export interface PromptDependencies {
   isInteractive: () => boolean;
   loadPreferences: () => Promise<GeneratorPreferences>;
   savePreferences: (preferences: GeneratorPreferences) => Promise<void>;
+  isPackageManagerAvailable: (packageManager: PackageManager) => boolean;
 }
 
 const defaultPromptDependencies: PromptDependencies = {
@@ -53,17 +55,16 @@ const defaultPromptDependencies: PromptDependencies = {
   isInteractive: () => Boolean(process.stdin.isTTY && process.stdout.isTTY),
   loadPreferences: readPreferences,
   savePreferences: writePreferences,
+  isPackageManagerAvailable: isPackageManagerAvailable,
 };
 
 export async function resolvePromptOptions(
   options: CliOptions,
   dependencies: PromptDependencies = defaultPromptDependencies,
 ): Promise<ResolvedPromptOptions> {
-  const preferences = await dependencies.loadPreferences();
-
   const projectArg = await resolveProjectArg(options, dependencies);
-  const packageManager = await resolvePackageManager(options, preferences, dependencies);
-  const exampleSelection = await resolveExampleSelection(options, preferences, dependencies);
+  const packageManager = await resolvePackageManager(options, dependencies);
+  const exampleSelection = await resolveExampleSelection(options, dependencies);
 
   // Preference persistence should not block scaffolding.
   try {
@@ -103,41 +104,92 @@ async function resolveProjectArg(
 
 async function resolvePackageManager(
   options: CliOptions,
-  preferences: GeneratorPreferences,
   dependencies: PromptDependencies,
 ): Promise<PackageManager> {
   if (options.packageManagerProvided) {
+    if (!dependencies.isPackageManagerAvailable(options.packageManager)) {
+      throw new Error(
+        `Package manager "${options.packageManager}" is not available on PATH. Install it or rerun with --pm <${SUPPORTED_PACKAGE_MANAGERS.join('|')}>.`,
+      );
+    }
     return options.packageManager;
   }
 
-  const fallback = preferences.packageManager ?? options.packageManager;
+  const fallback = options.packageManager;
+
   if (options.yes) {
+    if (!dependencies.isPackageManagerAvailable(fallback)) {
+      throw new Error(
+        `Default package manager "${fallback}" is not available on PATH. Install it or rerun with --pm <${SUPPORTED_PACKAGE_MANAGERS.join('|')}>.`,
+      );
+    }
     return fallback;
   }
 
   if (!dependencies.isInteractive()) {
+    if (!dependencies.isPackageManagerAvailable(fallback)) {
+      throw new Error(
+        `Default package manager "${fallback}" is not available on PATH. Install it or rerun with --pm <${SUPPORTED_PACKAGE_MANAGERS.join('|')}>.`,
+      );
+    }
     return fallback;
   }
 
-  return await promptSelection<PackageManager>(
-    dependencies,
-    `Package manager [${SUPPORTED_PACKAGE_MANAGERS.join('/')}] (default: ${fallback}): `,
-    SUPPORTED_PACKAGE_MANAGERS,
-    fallback,
-    'Unsupported package manager selection',
-  );
+  return await promptPackageManagerSelection(dependencies, fallback);
+}
+
+async function promptPackageManagerSelection(
+  dependencies: PromptDependencies,
+  defaultValue: PackageManager,
+): Promise<PackageManager> {
+  const prompt = `Package manager [${SUPPORTED_PACKAGE_MANAGERS.join('/')}] (default: ${defaultValue}): `;
+
+  for (;;) {
+    const answer = (await dependencies.ask(prompt)).trim();
+    const candidate = (answer || defaultValue) as PackageManager;
+
+    if (!SUPPORTED_PACKAGE_MANAGERS.includes(candidate)) {
+      console.error(
+        `Unsupported package manager selection: "${candidate}". Allowed values: ${SUPPORTED_PACKAGE_MANAGERS.join(', ')}`,
+      );
+      continue;
+    }
+
+    if (!dependencies.isPackageManagerAvailable(candidate)) {
+      console.error(
+        `Package manager "${candidate}" is not available on PATH. Choose one of: ${SUPPORTED_PACKAGE_MANAGERS.join(', ')}`,
+      );
+      continue;
+    }
+
+    return candidate;
+  }
+}
+
+function isPackageManagerAvailable(packageManager: PackageManager): boolean {
+  const result = spawnSync(packageManager, ['--version'], {
+    stdio: 'ignore',
+  });
+
+  if (result.error) {
+    const error = result.error as NodeJS.ErrnoException;
+    if (error.code === 'ENOENT') {
+      return false;
+    }
+  }
+
+  return result.status === 0;
 }
 
 async function resolveExampleSelection(
   options: CliOptions,
-  preferences: GeneratorPreferences,
   dependencies: PromptDependencies,
 ): Promise<ExampleSelection> {
   if (options.exampleSelectionProvided) {
     return options.exampleSelection;
   }
 
-  const fallback = preferences.exampleSelection ?? options.exampleSelection;
+  const fallback = options.exampleSelection;
   if (options.yes) {
     return fallback;
   }
