@@ -13,6 +13,7 @@ export const AZTEC_NODE_URL = process.env.AZTEC_NODE_URL ?? 'http://127.0.0.1:80
 export const AZTEC_NODE_PORT = process.env.AZTEC_NODE_PORT ?? '8080';
 export const AZTEC_ADMIN_PORT = process.env.AZTEC_ADMIN_PORT ?? '8880';
 export const L1_RPC_URL = process.env.L1_RPC_URL ?? 'http://127.0.0.1:8545';
+const AZTEC_CLI_VERSION = process.env.AZTEC_VERSION ?? process.env.VERSION;
 
 export const DEPLOYER_PRIVATE_KEY =
   process.env.L1_DEPLOYER_PRIVATE_KEY ??
@@ -98,6 +99,79 @@ function pushLogs(logs: string[], chunk: Buffer): void {
   }
 }
 
+function getAztecCliEnv(): NodeJS.ProcessEnv {
+  if (!AZTEC_CLI_VERSION) {
+    return process.env;
+  }
+  return {
+    ...process.env,
+    VERSION: AZTEC_CLI_VERSION,
+  };
+}
+
+function resolveAztecStartArgs(env: NodeJS.ProcessEnv): string[] {
+  const help = spawnSync('aztec', ['start', '--help'], {
+    encoding: 'utf8',
+    timeout: 30_000,
+    env,
+  });
+  const helpText = `${help.stdout ?? ''}\n${help.stderr ?? ''}`;
+
+  if (helpText.includes('--local-network')) {
+    return ['start', '--local-network', '--port', AZTEC_NODE_PORT, '--admin-port', AZTEC_ADMIN_PORT];
+  }
+
+  if (helpText.includes('--network <value>')) {
+    return ['start', '--network', 'local', '--port', AZTEC_NODE_PORT, '--admin-port', AZTEC_ADMIN_PORT];
+  }
+
+  return ['start', '--local-network', '--port', AZTEC_NODE_PORT, '--admin-port', AZTEC_ADMIN_PORT];
+}
+
+function alternateAztecStartArgs(args: string[]): string[] | null {
+  if (args.includes('--local-network')) {
+    return ['start', '--network', 'local', '--port', AZTEC_NODE_PORT, '--admin-port', AZTEC_ADMIN_PORT];
+  }
+  if (args.includes('--network')) {
+    return ['start', '--local-network', '--port', AZTEC_NODE_PORT, '--admin-port', AZTEC_ADMIN_PORT];
+  }
+  return null;
+}
+
+function spawnAztecStartProcess(
+  args: string[],
+  logs: string[],
+  env: NodeJS.ProcessEnv,
+): ChildProcessWithoutNullStreams {
+  const process = spawn('aztec', args, {
+    cwd: REPO_ROOT,
+    stdio: ['ignore', 'pipe', 'pipe'],
+    env,
+  });
+  process.stdout.on('data', (chunk: Buffer) => pushLogs(logs, chunk));
+  process.stderr.on('data', (chunk: Buffer) => pushLogs(logs, chunk));
+  return process;
+}
+
+async function waitForAztecRuntimeReady(
+  process: ChildProcessWithoutNullStreams,
+  logs: string[],
+  timeoutMs: number,
+): Promise<'ready' | 'exited' | 'timeout'> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const [aztecReady, l1Ready] = await Promise.all([isAztecNodeReady(), isL1Ready()]);
+    if (aztecReady && l1Ready) {
+      return 'ready';
+    }
+    if (process.exitCode !== null) {
+      return 'exited';
+    }
+    await sleep(1_500);
+  }
+  return 'timeout';
+}
+
 async function isJsonRpcEndpointReady(url: string, method: string): Promise<boolean> {
   try {
     const response = await fetch(url, {
@@ -159,35 +233,40 @@ export async function ensureAztecLocalNetwork(): Promise<LocalRuntime> {
     return { process: null, logs: [] };
   }
 
-  const logs: string[] = [];
-  const process = spawn(
-    'aztec',
-    ['start', '--local-network', '--port', AZTEC_NODE_PORT, '--admin-port', AZTEC_ADMIN_PORT],
-    {
-      cwd: REPO_ROOT,
-      stdio: ['ignore', 'pipe', 'pipe'],
-    },
-  );
-
-  process.stdout.on('data', (chunk: Buffer) => pushLogs(logs, chunk));
-  process.stderr.on('data', (chunk: Buffer) => pushLogs(logs, chunk));
-
+  const aztecEnv = getAztecCliEnv();
   const timeoutMs = 240_000;
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    const [aztecReady, l1Ready] = await Promise.all([isAztecNodeReady(), isL1Ready()]);
-    if (aztecReady && l1Ready) {
-      ensureL1TestAccountBalances();
-      return { process, logs };
+  const logs: string[] = [];
+  let startArgs = resolveAztecStartArgs(aztecEnv);
+  let process = spawnAztecStartProcess(startArgs, logs, aztecEnv);
+
+  let status = await waitForAztecRuntimeReady(process, logs, timeoutMs);
+  if (status !== 'ready') {
+    const tail = logs.slice(-30).join('\n');
+    const hasUnknownOption =
+      tail.includes("unknown option '--local-network'") ||
+      tail.includes("unknown option '--network'");
+
+    if (status === 'exited' && hasUnknownOption) {
+      const alternateArgs = alternateAztecStartArgs(startArgs);
+      if (alternateArgs) {
+        process.kill('SIGKILL');
+        logs.length = 0;
+        startArgs = alternateArgs;
+        process = spawnAztecStartProcess(startArgs, logs, aztecEnv);
+        status = await waitForAztecRuntimeReady(process, logs, timeoutMs);
+      }
     }
-    if (process.exitCode !== null) {
-      break;
-    }
-    await sleep(1_500);
   }
 
-  const tail = logs.slice(-10).join('\n');
-  process.kill('SIGKILL');
+  if (status === 'ready') {
+    ensureL1TestAccountBalances();
+    return { process, logs };
+  }
+
+  const tail = logs.slice(-30).join('\n');
+  if (process.exitCode === null) {
+    process.kill('SIGKILL');
+  }
   throw new Error(`Aztec local network failed to start.\n${tail}`);
 }
 
