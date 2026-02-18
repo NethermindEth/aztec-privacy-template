@@ -156,7 +156,18 @@ build-aztec:
 	fi
 	@for dir in $(AZTEC_CONTRACT_DIRS); do \
 		echo "Compiling $$dir"; \
-		(cd $$dir && aztec compile); \
+		(cd $$dir && \
+			if aztec compile --help >/dev/null 2>&1; then \
+				aztec compile; \
+			elif command -v aztec-nargo >/dev/null 2>&1 && aztec-nargo compile --help >/dev/null 2>&1; then \
+				aztec-nargo compile; \
+			elif command -v nargo >/dev/null 2>&1 && nargo compile --help >/dev/null 2>&1; then \
+				nargo compile; \
+			else \
+				echo "No supported Aztec Noir compiler command found (tried: 'aztec compile', 'aztec-nargo compile', 'nargo compile')."; \
+				exit 1; \
+			fi \
+		); \
 	done
 
 $(BUILD_PROTOCOLS): build-protocol-%:
@@ -164,15 +175,48 @@ $(BUILD_PROTOCOLS): build-protocol-%:
 
 protocol-aave:
 	@echo "Building Aave protocol artifacts..."
-	@(cd packages/protocols/aave/aztec && aztec compile)
+	@(cd packages/protocols/aave/aztec && \
+		if aztec compile --help >/dev/null 2>&1; then \
+			aztec compile; \
+		elif command -v aztec-nargo >/dev/null 2>&1 && aztec-nargo compile --help >/dev/null 2>&1; then \
+			aztec-nargo compile; \
+		elif command -v nargo >/dev/null 2>&1 && nargo compile --help >/dev/null 2>&1; then \
+			nargo compile; \
+		else \
+			echo "No supported Aztec Noir compiler command found (tried: 'aztec compile', 'aztec-nargo compile', 'nargo compile')."; \
+			exit 1; \
+		fi \
+	)
 
 protocol-uniswap:
 	@echo "Building Uniswap protocol artifacts..."
-	@(cd packages/protocols/uniswap/aztec && aztec compile)
+	@(cd packages/protocols/uniswap/aztec && \
+		if aztec compile --help >/dev/null 2>&1; then \
+			aztec compile; \
+		elif command -v aztec-nargo >/dev/null 2>&1 && aztec-nargo compile --help >/dev/null 2>&1; then \
+			aztec-nargo compile; \
+		elif command -v nargo >/dev/null 2>&1 && nargo compile --help >/dev/null 2>&1; then \
+			nargo compile; \
+		else \
+			echo "No supported Aztec Noir compiler command found (tried: 'aztec compile', 'aztec-nargo compile', 'nargo compile')."; \
+			exit 1; \
+		fi \
+	)
 
 protocol-lido:
 	@echo "Building Lido protocol artifacts..."
-	@(cd packages/protocols/lido/aztec && aztec compile)
+	@(cd packages/protocols/lido/aztec && \
+		if aztec compile --help >/dev/null 2>&1; then \
+			aztec compile; \
+		elif command -v aztec-nargo >/dev/null 2>&1 && aztec-nargo compile --help >/dev/null 2>&1; then \
+			aztec-nargo compile; \
+		elif command -v nargo >/dev/null 2>&1 && nargo compile --help >/dev/null 2>&1; then \
+			nargo compile; \
+		else \
+			echo "No supported Aztec Noir compiler command found (tried: 'aztec compile', 'aztec-nargo compile', 'nargo compile')."; \
+			exit 1; \
+		fi \
+	)
 
 clean:
 	@echo "Cleaning build artifacts..."
