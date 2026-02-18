@@ -8,6 +8,7 @@
     "fmt": "bunx biome format --config-path .biome.json --write .",
     "fmt:check": "bunx biome format --config-path .biome.json .",
     "lint": "bunx biome lint --config-path .biome.json .",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "bun test"
   },
   "devDependencies": {
@@ -17,6 +18,7 @@
     "@aztec/test-wallet": "3.0.0-devnet.6-patch.1",
     "@biomejs/biome": "^1.9.4",
     "solhint": "^6.0.3",
+    "typescript": "^5.9.2",
     "tsx": "^4.20.3"
   }
 }
