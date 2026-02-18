@@ -90,6 +90,17 @@ jobs:
         with:
           bun-version: ${{ env.BUN_VERSION }}
 
+      - name: Ensure tag matches generator package version
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag_version="${GITHUB_REF_NAME#v}"
+          package_version="$(node -p "require('./generator/package.json').version")"
+          if [ "$tag_version" != "$package_version" ]; then
+            echo "Tag version ($tag_version) does not match generator/package.json version ($package_version)."
+            exit 1
+          fi
+
       - name: Install generator dependencies
         run: make generator-install
 
