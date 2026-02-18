@@ -1,0 +1,36 @@
+export const SUPPORTED_PACKAGE_MANAGERS = ['bun', 'npm', 'pnpm', 'yarn'] as const;
+
+export type PackageManager = (typeof SUPPORTED_PACKAGE_MANAGERS)[number];
+
+export const TEMPLATE_COPY_ENTRIES = [
+  '.gitignore',
+  '.solhint.json',
+  'Makefile',
+  'README.md',
+  'contracts',
+  'scripts',
+  'bun.lock',
+] as const;
+
+export const STARTER_PACKAGE_JSON_BASE = {
+  private: true,
+  version: '0.1.0',
+  description: 'Protocol-agnostic starter for Aztec privacy integrations',
+  license: 'MIT',
+  scripts: {
+    fmt: 'make fmt',
+    'fmt:check': 'make fmt-check',
+    lint: 'make lint',
+    test: 'make test',
+  },
+  devDependencies: {
+    solhint: '^6.0.3',
+  },
+} as const;
+
+export const INSTALL_COMMANDS: Record<PackageManager, string> = {
+  bun: 'bun install',
+  npm: 'npm install',
+  pnpm: 'pnpm install',
+  yarn: 'yarn install',
+};
