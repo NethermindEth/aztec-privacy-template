@@ -3,10 +3,7 @@ use dep::aztec::macros::aztec;
 #[aztec]
 pub(crate) contract UniswapPrivacyAdapter {
     use dep::aztec::{
-        macros::{
-            functions::{external, initializer},
-            storage::storage,
-        },
+        macros::{functions::{external, initializer}, storage::storage},
         protocol_types::{
             address::{AztecAddress, EthAddress},
             hash::poseidon2_hash,
@@ -72,9 +69,9 @@ pub(crate) contract UniswapPrivacyAdapter {
 
         let portal = self.storage.portal_address.read();
         self.context.message_portal(portal, content);
-        UniswapPrivacyAdapter::at(self.context.this_address())
-            ._set_swap_pending(intent_id)
-            .enqueue(self.context);
+        UniswapPrivacyAdapter::at(self.context.this_address())._set_swap_pending(intent_id).enqueue(
+            self.context,
+        );
 
         intent_id
     }

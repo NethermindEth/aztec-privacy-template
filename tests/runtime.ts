@@ -118,11 +118,26 @@ function resolveAztecStartArgs(env: NodeJS.ProcessEnv): string[] {
   const helpText = `${help.stdout ?? ''}\n${help.stderr ?? ''}`;
 
   if (helpText.includes('--local-network')) {
-    return ['start', '--local-network', '--port', AZTEC_NODE_PORT, '--admin-port', AZTEC_ADMIN_PORT];
+    return [
+      'start',
+      '--local-network',
+      '--port',
+      AZTEC_NODE_PORT,
+      '--admin-port',
+      AZTEC_ADMIN_PORT,
+    ];
   }
 
   if (helpText.includes('--network <value>')) {
-    return ['start', '--network', 'local', '--port', AZTEC_NODE_PORT, '--admin-port', AZTEC_ADMIN_PORT];
+    return [
+      'start',
+      '--network',
+      'local',
+      '--port',
+      AZTEC_NODE_PORT,
+      '--admin-port',
+      AZTEC_ADMIN_PORT,
+    ];
   }
 
   return ['start', '--local-network', '--port', AZTEC_NODE_PORT, '--admin-port', AZTEC_ADMIN_PORT];
@@ -130,10 +145,25 @@ function resolveAztecStartArgs(env: NodeJS.ProcessEnv): string[] {
 
 function alternateAztecStartArgs(args: string[]): string[] | null {
   if (args.includes('--local-network')) {
-    return ['start', '--network', 'local', '--port', AZTEC_NODE_PORT, '--admin-port', AZTEC_ADMIN_PORT];
+    return [
+      'start',
+      '--network',
+      'local',
+      '--port',
+      AZTEC_NODE_PORT,
+      '--admin-port',
+      AZTEC_ADMIN_PORT,
+    ];
   }
   if (args.includes('--network')) {
-    return ['start', '--local-network', '--port', AZTEC_NODE_PORT, '--admin-port', AZTEC_ADMIN_PORT];
+    return [
+      'start',
+      '--local-network',
+      '--port',
+      AZTEC_NODE_PORT,
+      '--admin-port',
+      AZTEC_ADMIN_PORT,
+    ];
   }
   return null;
 }

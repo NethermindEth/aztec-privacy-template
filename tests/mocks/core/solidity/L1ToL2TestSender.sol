@@ -7,11 +7,9 @@ interface IInboxLike {
         uint256 version;
     }
 
-    function sendL2Message(
-        L2Actor memory recipient,
-        bytes32 content,
-        bytes32 secretHash
-    ) external returns (bytes32 messageHash, uint256 index);
+    function sendL2Message(L2Actor memory recipient, bytes32 content, bytes32 secretHash)
+        external
+        returns (bytes32 messageHash, uint256 index);
 }
 
 /// @title L1ToL2TestSender
@@ -27,11 +25,8 @@ contract L1ToL2TestSender {
         bytes32 content,
         bytes32 secretHash
     ) external returns (bytes32 messageHash, uint256 index) {
-        (messageHash, index) = IInboxLike(inbox).sendL2Message(
-            IInboxLike.L2Actor({actor: recipientActor, version: recipientVersion}),
-            content,
-            secretHash
-        );
+        (messageHash, index) = IInboxLike(inbox)
+            .sendL2Message(IInboxLike.L2Actor({actor: recipientActor, version: recipientVersion}), content, secretHash);
 
         lastMessageHash = messageHash;
         lastMessageIndex = index;

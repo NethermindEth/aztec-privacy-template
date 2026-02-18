@@ -3,6 +3,16 @@
   "vcs": {
     "enabled": false
   },
+  "files": {
+    "ignore": [
+      "**/node_modules/**",
+      "**/.git/**",
+      "**/target/**",
+      "**/cache/**",
+      "**/out/**",
+      "**/coverage/**"
+    ]
+  },
   "formatter": {
     "enabled": true,
     "indentStyle": "space",

@@ -151,11 +151,7 @@ abstract contract EscapeHatch {
     /// @notice Reads an escape request.
     /// @param messageHash Message hash key.
     /// @return request Active request payload.
-    function getEscapeRequest(bytes32 messageHash)
-        external
-        view
-        returns (EscapeRequest memory request)
-    {
+    function getEscapeRequest(bytes32 messageHash) external view returns (EscapeRequest memory request) {
         return escapeRequests[messageHash];
     }
 }

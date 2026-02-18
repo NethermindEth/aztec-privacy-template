@@ -59,11 +59,7 @@ contract LidoPortal is BasePortal, EscapeHatch {
     /// @param messageHash Hash for the action request.
     /// @param actor Address that initiated the request.
     /// @param amount Amount in request payload.
-    event LidoFlowRequested(
-        bytes32 indexed messageHash,
-        address indexed actor,
-        uint256 indexed amount
-    );
+    event LidoFlowRequested(bytes32 indexed messageHash, address indexed actor, uint256 indexed amount);
 
     /// @notice emitted when a request fails and is registered into escape hatch.
     /// @param messageHash Hash for the action request.
@@ -72,11 +68,7 @@ contract LidoPortal is BasePortal, EscapeHatch {
     /// @param amount Amount reserved for escape.
     /// @param timeoutBlocks Effective timeout for claim.
     event LidoFlowEscaped(
-        bytes32 indexed messageHash,
-        bytes32 indexed action,
-        address indexed actor,
-        uint256 amount,
-        uint64 timeoutBlocks
+        bytes32 indexed messageHash, bytes32 indexed action, address indexed actor, uint256 amount, uint64 timeoutBlocks
     );
 
     /// @notice emitted when an action completes successfully.
@@ -84,12 +76,7 @@ contract LidoPortal is BasePortal, EscapeHatch {
     /// @param action Kind of action.
     /// @param actor Address associated with the action.
     /// @param amount Amount handled by the action.
-    event LidoFlowCompleted(
-        bytes32 indexed messageHash,
-        bytes32 indexed action,
-        address indexed actor,
-        uint256 amount
-    );
+    event LidoFlowCompleted(bytes32 indexed messageHash, bytes32 indexed action, address indexed actor, uint256 amount);
 
     error InvalidAddress();
     error InvalidAmount();
@@ -117,12 +104,10 @@ contract LidoPortal is BasePortal, EscapeHatch {
     /// @param recipient Receiver of protocol output token.
     /// @param referral Optional referral address.
     /// @return messageHash Outbound message hash for matching inbound execution.
-    function requestStake(
-        bytes32 content,
-        uint256 amount,
-        address recipient,
-        address referral
-    ) external returns (bytes32 messageHash) {
+    function requestStake(bytes32 content, uint256 amount, address recipient, address referral)
+        external
+        returns (bytes32 messageHash)
+    {
         if (amount == 0) {
             revert InvalidAmount();
         }
@@ -230,54 +215,31 @@ contract LidoPortal is BasePortal, EscapeHatch {
     /// @param sender Original action initiator.
     /// @param nonce Action nonce.
     /// @return messageHash Message hash.
-    function messageHashFor(
-        bytes32 content,
-        address sender,
-        uint64 nonce
-    ) external view returns (bytes32 messageHash) {
+    function messageHashFor(bytes32 content, address sender, uint64 nonce) external view returns (bytes32 messageHash) {
         return _buildMessageHash(content, sender, nonce);
     }
 
-    function _markStakeRequest(
-        bytes32 messageHash,
-        address actor,
-        uint256 amount,
-        address recipient,
-        address referral
-    ) private {
+    function _markStakeRequest(bytes32 messageHash, address actor, uint256 amount, address recipient, address referral)
+        private
+    {
         if (actor == address(0)) {
             revert InvalidAddress();
         }
 
         stakeRequests[messageHash] = StakeRequest({
-            action: STAKE_FLOW,
-            actor: actor,
-            recipient: recipient,
-            referral: referral,
-            amount: amount,
-            exists: true
+            action: STAKE_FLOW, actor: actor, recipient: recipient, referral: referral, amount: amount, exists: true
         });
 
         emit LidoFlowRequested(messageHash, actor, amount);
     }
 
-    function _markUnstakeRequest(
-        bytes32 messageHash,
-        address actor,
-        uint256 amount,
-        address recipient
-    ) private {
+    function _markUnstakeRequest(bytes32 messageHash, address actor, uint256 amount, address recipient) private {
         if (actor == address(0)) {
             revert InvalidAddress();
         }
 
-        unstakeRequests[messageHash] = UnstakeRequest({
-            action: UNSTAKE_FLOW,
-            actor: actor,
-            recipient: recipient,
-            amount: amount,
-            exists: true
-        });
+        unstakeRequests[messageHash] =
+            UnstakeRequest({action: UNSTAKE_FLOW, actor: actor, recipient: recipient, amount: amount, exists: true});
 
         emit LidoFlowRequested(messageHash, actor, amount);
     }
@@ -295,42 +257,28 @@ contract LidoPortal is BasePortal, EscapeHatch {
         }
 
         if (
-            request.action != STAKE_FLOW ||
-            request.actor != actor ||
-            request.amount != amount ||
-            request.recipient != recipient ||
-            request.referral != referral
+            request.action != STAKE_FLOW || request.actor != actor || request.amount != amount
+                || request.recipient != recipient || request.referral != referral
         ) {
             revert FlowRequestMismatch();
         }
     }
 
-    function _assertUnstakeRequest(
-        bytes32 messageHash,
-        address actor,
-        uint256 amount,
-        address recipient
-    ) private view {
+    function _assertUnstakeRequest(bytes32 messageHash, address actor, uint256 amount, address recipient) private view {
         UnstakeRequest memory request = unstakeRequests[messageHash];
         if (!request.exists) {
             revert FlowRequestNotFound();
         }
 
         if (
-            request.action != UNSTAKE_FLOW ||
-            request.actor != actor ||
-            request.amount != amount ||
-            request.recipient != recipient
+            request.action != UNSTAKE_FLOW || request.actor != actor || request.amount != amount
+                || request.recipient != recipient
         ) {
             revert FlowRequestMismatch();
         }
     }
 
-    function _executeStake(
-        address recipient,
-        address referral,
-        uint256 amount
-    ) private returns (bool) {
+    function _executeStake(address recipient, address referral, uint256 amount) private returns (bool) {
         try ILidoLike(LIDO_PROTOCOL).submit{value: amount}(recipient, referral) {
             return true;
         } catch {
@@ -338,11 +286,7 @@ contract LidoPortal is BasePortal, EscapeHatch {
         }
     }
 
-    function _executeUnstake(
-        address owner,
-        address recipient,
-        uint256 amount
-    ) private returns (bool) {
+    function _executeUnstake(address owner, address recipient, uint256 amount) private returns (bool) {
         try ILidoLike(LIDO_PROTOCOL).unstake(owner, recipient, amount) returns (uint256 unlocked) {
             return unlocked == amount;
         } catch {

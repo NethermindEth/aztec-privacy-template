@@ -3,10 +3,7 @@ use dep::aztec::macros::aztec;
 #[aztec]
 pub(crate) contract AavePrivacyAdapter {
     use dep::aztec::{
-        macros::{
-            functions::{external, initializer},
-            storage::storage,
-        },
+        macros::{functions::{external, initializer}, storage::storage},
         protocol_types::{
             address::{AztecAddress, EthAddress},
             hash::poseidon2_hash,
@@ -34,7 +31,12 @@ pub(crate) contract AavePrivacyAdapter {
     }
 
     #[external("private")]
-    fn request_deposit(asset: Field, amount: u128, referral_code: u16, secret_hash: Field) -> pub Field {
+    fn request_deposit(
+        asset: Field,
+        amount: u128,
+        referral_code: u16,
+        secret_hash: Field,
+    ) -> pub Field {
         let caller = self.msg_sender().unwrap();
         assert(amount > 0, "Amount must be greater than zero");
 
@@ -47,14 +49,20 @@ pub(crate) contract AavePrivacyAdapter {
             1,
         ]);
 
-        let content =
-            poseidon2_hash([intent_id, owner_hash, asset, amount as Field, referral_code as Field, secret_hash]);
+        let content = poseidon2_hash([
+            intent_id,
+            owner_hash,
+            asset,
+            amount as Field,
+            referral_code as Field,
+            secret_hash,
+        ]);
 
         let portal = self.storage.portal_address.read();
         self.context.message_portal(portal, content);
-        AavePrivacyAdapter::at(self.context.this_address())
-            ._set_deposit_pending(intent_id)
-            .enqueue(self.context);
+        AavePrivacyAdapter::at(self.context.this_address())._set_deposit_pending(intent_id).enqueue(
+            self.context,
+        );
 
         intent_id
     }

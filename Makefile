@@ -11,7 +11,8 @@ SOLIDITY_FILES := $(shell find packages -type f -name '*.sol' \
 
 WORKDIRS := packages/core packages/protocols/aave packages/protocols/uniswap packages/protocols/lido tests tests/e2e
 AZTEC_CONTRACT_DIRS := packages/protocols/aave/aztec packages/protocols/uniswap/aztec packages/protocols/lido/aztec
-FMT_TARGETS := $(shell find . -type f \( -name "*.ts" -o -name "*.js" -o -name "*.cjs" -o -name "*.mjs" \) -not -path "./node_modules/*" -not -path "./.git/*" -not -name ".biome.json")
+BIOME_TARGET := .
+SOLIDITY_FMT_FILES := $(shell find packages tests -type f -name '*.sol' -not -path '*/cache/*' -not -path '*/out/*' 2>/dev/null)
 CORE_SOL_TESTS := $(shell find packages/core/solidity -type f -name "*.t.sol" 2>/dev/null)
 PROTOCOLS := $(filter-out .keep, $(notdir $(wildcard packages/protocols/*)))
 BUILD_PROTOCOLS := $(addprefix build-protocol-,$(PROTOCOLS))
@@ -27,7 +28,7 @@ help:
 	@printf "  make install         Verify toolchain + install dependencies\n"
 	@printf "  make verify-toolchain Check required local tooling\n"
 	@printf "  make fmt             Format supported files\n"
-	@printf "  make fmt-check       Check formatting without writing\n"
+	@printf "  make fmt-check       Check formatting (TS/JS + Solidity + Noir)\n"
 	@printf "  make lint            Run biome + solhint\n"
 	@printf "  make typecheck       Run TypeScript type checks\n"
 	@printf "  make test            Run test suite (unit + real e2e)\n"
@@ -72,17 +73,41 @@ install: verify-toolchain
 	@echo "Install complete."
 
 fmt:
-	@$(BIOME) format $(BIOME_CONFIG) --write $(FMT_TARGETS)
+	@echo "Formatting Biome-supported files..."
+	@$(BIOME) format $(BIOME_CONFIG) --write $(BIOME_TARGET)
+	@echo "Formatting Solidity files with forge fmt..."
+	@if [ -n "$(SOLIDITY_FMT_FILES)" ]; then \
+		forge fmt $(SOLIDITY_FMT_FILES); \
+	else \
+		echo "No Solidity files found; skipping forge fmt."; \
+	fi
+	@echo "Formatting Noir files with aztec fmt..."
+	@for dir in $(AZTEC_CONTRACT_DIRS); do \
+		echo "Formatting $$dir"; \
+		(cd $$dir && aztec fmt); \
+	done
 
 fmt-check:
-	@$(BIOME) format $(BIOME_CONFIG) $(FMT_TARGETS)
+	@echo "Checking Biome formatting..."
+	@$(BIOME) format $(BIOME_CONFIG) $(BIOME_TARGET)
+	@echo "Checking Solidity formatting with forge fmt --check..."
+	@if [ -n "$(SOLIDITY_FMT_FILES)" ]; then \
+		forge fmt --check $(SOLIDITY_FMT_FILES); \
+	else \
+		echo "No Solidity files found; skipping forge fmt --check."; \
+	fi
+	@echo "Checking Noir formatting with aztec fmt --check..."
+	@for dir in $(AZTEC_CONTRACT_DIRS); do \
+		echo "Checking $$dir"; \
+		(cd $$dir && aztec fmt --check); \
+	done
 
 lint:
 	@echo "Running biome lints..."
-	@$(BIOME) lint $(BIOME_CONFIG) $(FMT_TARGETS)
+	@$(BIOME) lint $(BIOME_CONFIG) $(BIOME_TARGET)
 	@echo "Running solhint..."
 	@if [ -n "$(SOLIDITY_FILES)" ]; then \
-		$(SOLHINT) $(SOLIDITY_FILES); \
+		NO_UPDATE_NOTIFIER=1 $(SOLHINT) $(SOLIDITY_FILES); \
 	else \
 		echo "No solidity files found; skipping solhint."; \
 	fi

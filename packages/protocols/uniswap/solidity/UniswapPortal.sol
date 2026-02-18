@@ -63,10 +63,7 @@ contract UniswapPortal is BasePortal, EscapeHatch {
     /// @param actor Address that initiated the request.
     /// @param amountIn Input amount.
     event UniswapFlowRequested(
-        bytes32 indexed messageHash,
-        bytes32 indexed action,
-        address indexed actor,
-        uint256 amountIn
+        bytes32 indexed messageHash, bytes32 indexed action, address indexed actor, uint256 amountIn
     );
 
     /// @notice emitted when a swap request fails and is registered into escape hatch.
@@ -76,11 +73,7 @@ contract UniswapPortal is BasePortal, EscapeHatch {
     /// @param amount Amount reserved for the escape.
     /// @param timeoutBlocks Effective timeout for claim.
     event UniswapFlowEscaped(
-        bytes32 indexed messageHash,
-        bytes32 indexed action,
-        address indexed actor,
-        uint256 amount,
-        uint64 timeoutBlocks
+        bytes32 indexed messageHash, bytes32 indexed action, address indexed actor, uint256 amount, uint64 timeoutBlocks
     );
 
     /// @notice emitted when a swap action is completed successfully.
@@ -89,10 +82,7 @@ contract UniswapPortal is BasePortal, EscapeHatch {
     /// @param actor Address associated with the action.
     /// @param amount Amount swapped in.
     event UniswapFlowCompleted(
-        bytes32 indexed messageHash,
-        bytes32 indexed action,
-        address indexed actor,
-        uint256 amount
+        bytes32 indexed messageHash, bytes32 indexed action, address indexed actor, uint256 amount
     );
 
     error InvalidAddress();
@@ -106,12 +96,9 @@ contract UniswapPortal is BasePortal, EscapeHatch {
     /// @param l2Contract_ L2 contract that consumes outbound messages.
     /// @param relayer_ Relayer address authorized for inbound message execution.
     /// @param swapRouter_ Uniswap router contract.
-    constructor(
-        bytes32 protocolId_,
-        address l2Contract_,
-        address relayer_,
-        address swapRouter_
-    ) BasePortal(protocolId_, l2Contract_, relayer_) {
+    constructor(bytes32 protocolId_, address l2Contract_, address relayer_, address swapRouter_)
+        BasePortal(protocolId_, l2Contract_, relayer_)
+    {
         if (swapRouter_ == address(0)) {
             revert InvalidAddress();
         }
@@ -154,15 +141,7 @@ contract UniswapPortal is BasePortal, EscapeHatch {
 
         messageHash = _sendL1ToL2Message(content, msg.sender);
         _markRequestMetadata(
-            messageHash,
-            SWAP_FLOW,
-            msg.sender,
-            tokenIn,
-            tokenOut,
-            amountIn,
-            minAmountOut,
-            fee,
-            recipient
+            messageHash, SWAP_FLOW, msg.sender, tokenIn, tokenOut, amountIn, minAmountOut, fee, recipient
         );
     }
 
@@ -190,15 +169,7 @@ contract UniswapPortal is BasePortal, EscapeHatch {
         uint64 timeoutBlocks
     ) external onlyRelayer {
         bytes32 messageHash = _consumeMatchedSwapRequest(
-            content,
-            sender,
-            tokenIn,
-            tokenOut,
-            amountIn,
-            minAmountOut,
-            fee,
-            recipient,
-            nonce
+            content, sender, tokenIn, tokenOut, amountIn, minAmountOut, fee, recipient, nonce
         );
 
         bool success = _executeSwap(tokenIn, tokenOut, amountIn, minAmountOut, fee, recipient);
@@ -216,11 +187,7 @@ contract UniswapPortal is BasePortal, EscapeHatch {
     /// @param sender Original action initiator.
     /// @param nonce Action nonce.
     /// @return messageHash Message hash.
-    function messageHashFor(
-        bytes32 content,
-        address sender,
-        uint64 nonce
-    ) external view returns (bytes32 messageHash) {
+    function messageHashFor(bytes32 content, address sender, uint64 nonce) external view returns (bytes32 messageHash) {
         return _buildMessageHash(content, sender, nonce);
     }
 
@@ -271,14 +238,9 @@ contract UniswapPortal is BasePortal, EscapeHatch {
         }
 
         if (
-            request.action != action ||
-            request.actor != actor ||
-            request.tokenIn != tokenIn ||
-            request.tokenOut != tokenOut ||
-            request.amountIn != amountIn ||
-            request.minAmountOut != minAmountOut ||
-            request.fee != fee ||
-            request.recipient != recipient
+            request.action != action || request.actor != actor || request.tokenIn != tokenIn
+                || request.tokenOut != tokenOut || request.amountIn != amountIn || request.minAmountOut != minAmountOut
+                || request.fee != fee || request.recipient != recipient
         ) {
             revert FlowRequestMismatch();
         }
@@ -308,17 +270,7 @@ contract UniswapPortal is BasePortal, EscapeHatch {
         }
 
         messageHash = _buildMessageHash(content, sender, nonce);
-        _assertFlowRequest(
-            messageHash,
-            SWAP_FLOW,
-            sender,
-            tokenIn,
-            tokenOut,
-            amountIn,
-            minAmountOut,
-            fee,
-            recipient
-        );
+        _assertFlowRequest(messageHash, SWAP_FLOW, sender, tokenIn, tokenOut, amountIn, minAmountOut, fee, recipient);
         _consumeL2ToL1Message(content, sender, nonce);
         delete swapRequests[messageHash];
     }
@@ -332,11 +284,7 @@ contract UniswapPortal is BasePortal, EscapeHatch {
     ) private {
         _registerEscape(messageHash, sender, tokenIn, amountIn, timeoutBlocks);
         emit UniswapFlowEscaped(
-            messageHash,
-            SWAP_FLOW,
-            sender,
-            amountIn,
-            timeoutBlocks == 0 ? DEFAULT_ESCAPE_TIMEOUT : timeoutBlocks
+            messageHash, SWAP_FLOW, sender, amountIn, timeoutBlocks == 0 ? DEFAULT_ESCAPE_TIMEOUT : timeoutBlocks
         );
     }
 
@@ -348,18 +296,10 @@ contract UniswapPortal is BasePortal, EscapeHatch {
         uint24 fee,
         address recipient
     ) private returns (bool) {
-        try
-            IUniswapV3RouterLike(SWAP_ROUTER).exactInputSingle(
-                tokenIn,
-                tokenOut,
-                fee,
-                recipient,
-                amountIn,
-                minAmountOut,
-                0
-            )
-            returns (uint256 amountOut)
-        {
+        try IUniswapV3RouterLike(SWAP_ROUTER)
+            .exactInputSingle(tokenIn, tokenOut, fee, recipient, amountIn, minAmountOut, 0) returns (
+            uint256 amountOut
+        ) {
             return !(amountOut < minAmountOut);
         } catch {
             return false;

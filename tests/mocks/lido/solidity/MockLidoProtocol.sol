@@ -61,11 +61,7 @@ contract MockLidoProtocol is ILidoLike {
     /// @param recipient Recipient of unlocked ETH.
     /// @param amount Amount requested.
     /// @return unlocked Amount unlocked.
-    function unstake(
-        address owner,
-        address recipient,
-        uint256 amount
-    ) external returns (uint256 unlocked) {
+    function unstake(address owner, address recipient, uint256 amount) external returns (uint256 unlocked) {
         if (shouldFail) {
             revert ProtocolOperationFailed();
         }

@@ -52,12 +52,7 @@ contract AavePortal is BasePortal, EscapeHatch {
     /// @param action Kind of action: deposit or withdraw.
     /// @param actor Address that initiated the request.
     /// @param amount Amount in request payload.
-    event AaveFlowRequested(
-        bytes32 indexed messageHash,
-        bytes32 indexed action,
-        address indexed actor,
-        uint256 amount
-    );
+    event AaveFlowRequested(bytes32 indexed messageHash, bytes32 indexed action, address indexed actor, uint256 amount);
 
     /// @notice emitted when a request fails and is registered into escape hatch.
     /// @param messageHash Hash for the action request.
@@ -66,11 +61,7 @@ contract AavePortal is BasePortal, EscapeHatch {
     /// @param amount Amount reserved for the escape.
     /// @param timeoutBlocks Effective timeout for claim.
     event AaveFlowEscaped(
-        bytes32 indexed messageHash,
-        bytes32 indexed action,
-        address indexed actor,
-        uint256 amount,
-        uint64 timeoutBlocks
+        bytes32 indexed messageHash, bytes32 indexed action, address indexed actor, uint256 amount, uint64 timeoutBlocks
     );
 
     /// @notice emitted when an action is completed successfully and mirrored back to L2.
@@ -78,12 +69,7 @@ contract AavePortal is BasePortal, EscapeHatch {
     /// @param action Kind of action.
     /// @param actor Address associated with the action.
     /// @param amount Amount handled by the action.
-    event AaveFlowCompleted(
-        bytes32 indexed messageHash,
-        bytes32 indexed action,
-        address indexed actor,
-        uint256 amount
-    );
+    event AaveFlowCompleted(bytes32 indexed messageHash, bytes32 indexed action, address indexed actor, uint256 amount);
 
     error InvalidAmount();
     error InvalidAddress();
@@ -97,13 +83,9 @@ contract AavePortal is BasePortal, EscapeHatch {
     /// @param relayer_ Relayer address authorized for inbound message execution.
     /// @param aavePool_ Aave pool contract.
     /// @param asset_ Token used by this core flow.
-    constructor(
-        bytes32 protocolId_,
-        address l2Contract_,
-        address relayer_,
-        address aavePool_,
-        address asset_
-    ) BasePortal(protocolId_, l2Contract_, relayer_) {
+    constructor(bytes32 protocolId_, address l2Contract_, address relayer_, address aavePool_, address asset_)
+        BasePortal(protocolId_, l2Contract_, relayer_)
+    {
         if (aavePool_ == address(0)) {
             revert InvalidAddress();
         }
@@ -121,11 +103,10 @@ contract AavePortal is BasePortal, EscapeHatch {
     /// @param amount Amount of asset in request.
     /// @param referralCode Protocol referral code.
     /// @return messageHash Outbound message hash for matching inbound execution.
-    function requestDeposit(
-        bytes32 content,
-        uint256 amount,
-        uint16 referralCode
-    ) external returns (bytes32 messageHash) {
+    function requestDeposit(bytes32 content, uint256 amount, uint16 referralCode)
+        external
+        returns (bytes32 messageHash)
+    {
         if (amount == 0) {
             revert InvalidAmount();
         }
@@ -187,11 +168,7 @@ contract AavePortal is BasePortal, EscapeHatch {
         if (!success) {
             _registerEscape(messageHash, sender, ASSET, amount, timeoutBlocks);
             emit AaveFlowEscaped(
-                messageHash,
-                DEPOSIT_FLOW,
-                sender,
-                amount,
-                timeoutBlocks == 0 ? DEFAULT_ESCAPE_TIMEOUT : timeoutBlocks
+                messageHash, DEPOSIT_FLOW, sender, amount, timeoutBlocks == 0 ? DEFAULT_ESCAPE_TIMEOUT : timeoutBlocks
             );
             return;
         }
@@ -206,13 +183,10 @@ contract AavePortal is BasePortal, EscapeHatch {
     /// @param amount Amount to withdraw.
     /// @param nonce Message nonce from request sequence.
     /// @param timeoutBlocks Timeout for fallback escape hatch.
-    function executeWithdraw(
-        bytes32 content,
-        address sender,
-        uint256 amount,
-        uint64 nonce,
-        uint64 timeoutBlocks
-    ) external onlyRelayer {
+    function executeWithdraw(bytes32 content, address sender, uint256 amount, uint64 nonce, uint64 timeoutBlocks)
+        external
+        onlyRelayer
+    {
         if (amount == 0) {
             revert InvalidAmount();
         }
@@ -230,11 +204,7 @@ contract AavePortal is BasePortal, EscapeHatch {
         if (!success) {
             _registerEscape(messageHash, sender, ASSET, amount, timeoutBlocks);
             emit AaveFlowEscaped(
-                messageHash,
-                WITHDRAW_FLOW,
-                sender,
-                amount,
-                timeoutBlocks == 0 ? DEFAULT_ESCAPE_TIMEOUT : timeoutBlocks
+                messageHash, WITHDRAW_FLOW, sender, amount, timeoutBlocks == 0 ? DEFAULT_ESCAPE_TIMEOUT : timeoutBlocks
             );
             return;
         }
@@ -248,20 +218,11 @@ contract AavePortal is BasePortal, EscapeHatch {
     /// @param sender Original action initiator.
     /// @param nonce Action nonce.
     /// @return messageHash Message hash.
-    function messageHashFor(
-        bytes32 content,
-        address sender,
-        uint64 nonce
-    ) external view returns (bytes32 messageHash) {
+    function messageHashFor(bytes32 content, address sender, uint64 nonce) external view returns (bytes32 messageHash) {
         return _buildMessageHash(content, sender, nonce);
     }
 
-    function _markRequestMetadata(
-        bytes32 messageHash,
-        bytes32 action,
-        address actor,
-        uint256 amount
-    ) private {
+    function _markRequestMetadata(bytes32 messageHash, bytes32 action, address actor, uint256 amount) private {
         if (amount == 0) {
             revert InvalidAmount();
         }
@@ -270,22 +231,12 @@ contract AavePortal is BasePortal, EscapeHatch {
             revert InvalidAddress();
         }
 
-        flowRequests[messageHash] = FlowRequest({
-            action: action,
-            actor: actor,
-            amount: amount,
-            exists: true
-        });
+        flowRequests[messageHash] = FlowRequest({action: action, actor: actor, amount: amount, exists: true});
 
         emit AaveFlowRequested(messageHash, action, actor, amount);
     }
 
-    function _assertFlowRequest(
-        bytes32 messageHash,
-        bytes32 action,
-        address actor,
-        uint256 amount
-    ) private view {
+    function _assertFlowRequest(bytes32 messageHash, bytes32 action, address actor, uint256 amount) private view {
         FlowRequest memory request = flowRequests[messageHash];
         if (!request.exists) {
             revert FlowRequestNotFound();
@@ -296,11 +247,7 @@ contract AavePortal is BasePortal, EscapeHatch {
         }
     }
 
-    function _executeDeposit(
-        address depositor,
-        uint256 amount,
-        uint16 referralCode
-    ) private returns (bool) {
+    function _executeDeposit(address depositor, uint256 amount, uint16 referralCode) private returns (bool) {
         try IAaveV3PoolLike(AAVE_POOL).supply(ASSET, amount, depositor, referralCode) {
             return true;
         } catch {
