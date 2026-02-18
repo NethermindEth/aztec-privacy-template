@@ -270,8 +270,10 @@ export function castKeccak(value: string): string {
   return run('cast', ['keccak', value]).stdout.trim();
 }
 
+type AztecAccountsTesting = typeof import('@aztec/accounts/testing/lazy');
+
 type AztecSdkModules = {
-  getInitialTestAccountsData: typeof import('@aztec/accounts/testing/lazy').getInitialTestAccountsData;
+  getInitialTestAccountsData: AztecAccountsTesting['getInitialTestAccountsData'];
   createAztecNodeClient: typeof import('@aztec/aztec.js/node').createAztecNodeClient;
   TokenContract: typeof import('@aztec/noir-contracts.js/Token').TokenContract;
   TestWallet: typeof import('@aztec/test-wallet/server').TestWallet;
@@ -300,33 +302,39 @@ export async function provisionPrivateTokenBalance(
     await loadAztecSdk();
   const aztecNode = createAztecNodeClient(AZTEC_NODE_URL);
   const wallet = await TestWallet.create(aztecNode);
-  const [ownerData] = await getInitialTestAccountsData();
-  const owner = await wallet.createSchnorrAccount(
-    ownerData.secret,
-    ownerData.salt,
-    ownerData.signingKey,
-  );
+  try {
+    const [ownerData] = await getInitialTestAccountsData();
+    const owner = await wallet.createSchnorrAccount(
+      ownerData.secret,
+      ownerData.salt,
+      ownerData.signingKey,
+    );
 
-  const token = await TokenContract.deploy(wallet, owner.address, tokenName, tokenSymbol, 18)
-    .send({ from: owner.address })
-    .deployed();
+    const token = await TokenContract.deploy(wallet, owner.address, tokenName, tokenSymbol, 18)
+      .send({ from: owner.address })
+      .deployed();
 
-  const balanceBefore = await token.methods
-    .balance_of_private(owner.address)
-    .simulate({ from: owner.address });
-  assert.equal(BigInt(balanceBefore), 0n);
+    const balanceBefore = await token.methods
+      .balance_of_private(owner.address)
+      .simulate({ from: owner.address });
+    assert.equal(BigInt(balanceBefore), 0n);
 
-  const mintTx = token.methods.mint_to_private(owner.address, amount).send({ from: owner.address });
-  const mintReceipt = await mintTx.wait();
-  assert.equal(Boolean(mintReceipt), true);
+    const mintTx = token.methods
+      .mint_to_private(owner.address, amount)
+      .send({ from: owner.address });
+    const mintReceipt = await mintTx.wait();
+    assert.equal(Boolean(mintReceipt), true);
 
-  const balanceAfter = await token.methods
-    .balance_of_private(owner.address)
-    .simulate({ from: owner.address });
-  assert.equal(BigInt(balanceAfter), amount);
+    const balanceAfter = await token.methods
+      .balance_of_private(owner.address)
+      .simulate({ from: owner.address });
+    assert.equal(BigInt(balanceAfter), amount);
 
-  return {
-    ownerAddress: owner.address.toString(),
-    balance: BigInt(balanceAfter),
-  };
+    return {
+      ownerAddress: owner.address.toString(),
+      balance: BigInt(balanceAfter),
+    };
+  } finally {
+    await wallet.stop();
+  }
 }
