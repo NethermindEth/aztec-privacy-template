@@ -13,6 +13,8 @@ test('parseArgs preserves legacy flag behavior and defaults', () => {
     packageManager: 'bun',
     exampleSelection: 'none',
     yes: false,
+    packageManagerProvided: false,
+    exampleSelectionProvided: false,
   });
 
   assert.deepEqual(parseArgs(['my-app', '--pm', 'npm', '--example', 'aave', '--yes']), {
@@ -20,6 +22,8 @@ test('parseArgs preserves legacy flag behavior and defaults', () => {
     packageManager: 'npm',
     exampleSelection: 'aave',
     yes: true,
+    packageManagerProvided: true,
+    exampleSelectionProvided: true,
   });
 
   assert.deepEqual(parseArgs(['my-app', '--pm=pnpm', '--example=all']), {
@@ -27,11 +31,21 @@ test('parseArgs preserves legacy flag behavior and defaults', () => {
     packageManager: 'pnpm',
     exampleSelection: 'all',
     yes: false,
+    packageManagerProvided: true,
+    exampleSelectionProvided: true,
+  });
+
+  assert.deepEqual(parseArgs([]), {
+    projectArg: undefined,
+    packageManager: 'bun',
+    exampleSelection: 'none',
+    yes: false,
+    packageManagerProvided: false,
+    exampleSelectionProvided: false,
   });
 });
 
 test('parseArgs rejects unsupported or malformed inputs', () => {
-  assert.throws(() => parseArgs([]), /Project name\/path is required/);
   assert.throws(() => parseArgs(['my-app', '--pm', 'pip']), /Unsupported package manager "pip"/);
   assert.throws(() => parseArgs(['my-app', '--example', 'foo']), /Unsupported example "foo"/);
   assert.throws(() => parseArgs(['my-app', '--bogus']), /Unknown option: --bogus/);

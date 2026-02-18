@@ -2,10 +2,12 @@ import type { ExampleSelection, PackageManager } from '../constants.js';
 import { assertExampleSelection, assertPackageManager } from '../validate.js';
 
 export interface CliOptions {
-  projectArg: string;
+  projectArg?: string;
   packageManager: PackageManager;
   exampleSelection: ExampleSelection;
   yes: boolean;
+  packageManagerProvided: boolean;
+  exampleSelectionProvided: boolean;
 }
 
 export function printUsage(): void {
@@ -19,6 +21,8 @@ export function parseArgs(argv: string[]): CliOptions {
   let packageManager: PackageManager = 'bun';
   let exampleSelection: ExampleSelection = 'none';
   let yes = false;
+  let packageManagerProvided = false;
+  let exampleSelectionProvided = false;
 
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
@@ -41,6 +45,7 @@ export function parseArgs(argv: string[]): CliOptions {
 
       assertPackageManager(value);
       packageManager = value;
+      packageManagerProvided = true;
       i += 1;
       continue;
     }
@@ -49,6 +54,7 @@ export function parseArgs(argv: string[]): CliOptions {
       const value = arg.slice('--pm='.length);
       assertPackageManager(value);
       packageManager = value;
+      packageManagerProvided = true;
       continue;
     }
 
@@ -60,6 +66,7 @@ export function parseArgs(argv: string[]): CliOptions {
 
       assertExampleSelection(value);
       exampleSelection = value;
+      exampleSelectionProvided = true;
       i += 1;
       continue;
     }
@@ -68,6 +75,7 @@ export function parseArgs(argv: string[]): CliOptions {
       const value = arg.slice('--example='.length);
       assertExampleSelection(value);
       exampleSelection = value;
+      exampleSelectionProvided = true;
       continue;
     }
 
@@ -82,9 +90,12 @@ export function parseArgs(argv: string[]): CliOptions {
     projectArg = arg;
   }
 
-  if (!projectArg) {
-    throw new Error('Project name/path is required');
-  }
-
-  return { projectArg, packageManager, exampleSelection, yes };
+  return {
+    projectArg: projectArg || undefined,
+    packageManager,
+    exampleSelection,
+    yes,
+    packageManagerProvided,
+    exampleSelectionProvided,
+  };
 }

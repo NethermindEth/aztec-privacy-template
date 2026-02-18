@@ -1,7 +1,6 @@
 import { relative } from 'node:path';
 
 import type { ExampleSelection, PackageManager } from './constants.js';
-import { resolvePromptOptions } from './prompts.js';
 import { scaffoldBaseTemplate } from './scaffold.js';
 import { assertTargetPathSafe, resolveProjectTarget } from './validate.js';
 
@@ -10,7 +9,6 @@ export interface CreateAppOptions {
   projectArg: string;
   packageManager: PackageManager;
   exampleSelection: ExampleSelection;
-  yes: boolean;
 }
 
 export interface CreateAppResult {
@@ -21,9 +19,7 @@ export interface CreateAppResult {
 }
 
 export async function createApp(options: CreateAppOptions): Promise<CreateAppResult> {
-  const { generatorRoot, projectArg, packageManager, exampleSelection, yes } = options;
-
-  await resolvePromptOptions({ yes });
+  const { generatorRoot, projectArg, packageManager, exampleSelection } = options;
 
   const { absoluteTargetPath, projectName } = resolveProjectTarget(projectArg);
   assertTargetPathSafe(absoluteTargetPath);

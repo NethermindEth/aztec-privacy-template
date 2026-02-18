@@ -3,16 +3,17 @@ import { createApp } from './create-app.js';
 import { parseArgs } from './helpers/cli-options.js';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { resolvePromptOptions } from './prompts.js';
 
 export async function run(argv: string[], importMetaUrl: string): Promise<void> {
-  const args = parseArgs(argv);
+  const parsedArgs = parseArgs(argv);
+  const args = await resolvePromptOptions(parsedArgs);
   const generatorRoot = resolveGeneratorRoot(importMetaUrl);
   const result = await createApp({
     generatorRoot,
     projectArg: args.projectArg,
     packageManager: args.packageManager,
     exampleSelection: args.exampleSelection,
-    yes: args.yes,
   });
 
   console.log(`\nScaffolded Aztec privacy starter at ${result.displayPath}`);
