@@ -13,6 +13,7 @@ concurrency:
 
 env:
   BUN_VERSION: "1.3.6"
+  NODE_VERSION: "20"
   AZTEC_VERSION: "3.0.0-devnet.6-patch.1"
 
 jobs:
@@ -28,6 +29,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -48,6 +54,75 @@ jobs:
           cd packages/create-aztec-privacy-template
           node --test test/baseline-contract.test.mjs
 
+  generator-e2e-matrix:
+    name: Generator E2E (${{ matrix.pm }} / ${{ matrix.example }} / ${{ matrix.install_mode }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        pm: [bun, npm, pnpm, yarn]
+        example: [none, aave, lido, uniswap, all]
+        install_mode: [skip, install]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Enable corepack package managers
+        shell: bash
+        run: |
+          corepack enable
+          corepack prepare pnpm@latest --activate
+          corepack prepare yarn@stable --activate
+          npm --version
+          pnpm --version
+          yarn --version
+          bun --version
+
+      - name: Install generator dependencies
+        run: make generator-install
+
+      - name: Run generator E2E matrix case
+        env:
+          CAPT_E2E_PM: ${{ matrix.pm }}
+          CAPT_E2E_EXAMPLE: ${{ matrix.example }}
+          CAPT_E2E_INSTALL_MODE: ${{ matrix.install_mode }}
+        run: make generator-e2e-case
+
+  generator-published-artifact-smoke:
+    name: Generator published artifact smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install generator dependencies
+        run: make generator-install
+
+      - name: Run published artifact smoke
+        run: make generator-published-artifact-smoke
+
   quality-and-contract-build:
     name: Quality + Solidity + Aztec compile
     runs-on: ubuntu-latest
@@ -55,6 +130,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -121,6 +201,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2

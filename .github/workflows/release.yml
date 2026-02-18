@@ -1,0 +1,67 @@
+name: Release Validation
+
+on:
+  push:
+    tags:
+      - "v*"
+  release:
+    types:
+      - published
+      - prereleased
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  BUN_VERSION: "1.3.6"
+  NODE_VERSION: "20"
+
+jobs:
+  generator-release-validation:
+    name: Generator package build + bootstrap validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Enable corepack package managers
+        shell: bash
+        run: |
+          corepack enable
+          corepack prepare pnpm@latest --activate
+          corepack prepare yarn@stable --activate
+
+      - name: Install generator dependencies
+        run: make generator-install
+
+      - name: Run generator release checks
+        run: make generator-release-check
+
+      - name: Validate CLI bootstrap from built dist
+        shell: bash
+        run: |
+          set -euo pipefail
+          temp_root="$(mktemp -d)"
+          target="$temp_root/release-bootstrap-app"
+          node packages/create-aztec-privacy-template/dist/cli.js \
+            "$target" \
+            --pm npm \
+            --example none \
+            --yes \
+            --skip-install \
+            --disable-git
+          test -f "$target/README.md"
+          test -f "$target/package.json"
