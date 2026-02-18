@@ -1,4 +1,7 @@
 node_modules/
+**/node_modules/
+dist/
+**/dist/
 coverage/
 .nyc_output/
 .cache/
@@ -10,10 +13,16 @@ package-lock.json
 pnpm-lock.yaml
 yarn.lock
 
+# Pack artifacts
+*.tgz
+
 # Build artifacts
 target/
 out/
 cache/
+**/target/
+**/out/
+**/cache/
 
 # Tooling artifacts
 .env
