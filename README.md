@@ -4,7 +4,7 @@ Single-repo starter for building Aztec + L1 protocol integrations.
 
 This repo has two concerns, clearly separated:
 
-1. `packages/create-aztec-privacy-template/`:
+1. `generator/`:
 CLI generator that scaffolds new starter projects.
 2. Runtime reference implementation:
 protocol adapters, Solidity portals, and E2E tests under `packages/` + `tests/`.
@@ -20,7 +20,7 @@ protocol adapters, Solidity portals, and E2E tests under `packages/` + `tests/`.
 |   |   |-- aave/                      # Aave protocol adapter contracts
 |   |   |-- lido/                      # Lido protocol adapter contracts
 |   |   `-- uniswap/                   # Uniswap protocol adapter contracts
-|   `-- create-aztec-privacy-template/ # project generator package
+|-- generator/                         # project generator package
 |-- tests/                             # E2E and runtime helpers
 `-- scripts/                           # shared compile helpers
 ```
@@ -73,13 +73,13 @@ make generator-release-check
 ## Scaffold with the Generator
 
 ```bash
-node packages/create-aztec-privacy-template/dist/cli.js my-app --pm bun --example none --yes
+node generator/dist/cli.js my-app --pm bun --example none --yes
 ```
 
 Remote example source overlay (GitHub URL or owner/repo path):
 
 ```bash
-node packages/create-aztec-privacy-template/dist/cli.js my-app \
+node generator/dist/cli.js my-app \
   --example-source aztecprotocol/aztec-packages/examples/noir-contracts#master \
   --yes
 ```
