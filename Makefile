@@ -25,7 +25,7 @@ ADAPTER_FINALIZE_RETRY_TIMEOUT_MS ?= 90000
 ADAPTER_POLL_INTERVAL_MS ?= 500
 ADAPTER_FAIL_FAST ?= 1
 
-.PHONY: help install verify-toolchain fmt fmt-check lint typecheck test test-unit test-e2e test-e2e-fast test-e2e-adapters test-e2e-full build build-aztec clean check test-core lint-core protocol-aave protocol-uniswap protocol-lido build-protocol-% dev-sandbox-up dev-sandbox-down generator-install generator-typecheck generator-build generator-test scaffold-help scaffold-check scaffold-test scaffold-build
+.PHONY: help install verify-toolchain fmt fmt-check lint typecheck test test-unit test-e2e test-e2e-fast test-e2e-adapters test-e2e-full build build-aztec clean check test-core lint-core protocol-aave protocol-uniswap protocol-lido build-protocol-% dev-sandbox-up dev-sandbox-down generator-install generator-lint generator-check generator-typecheck generator-build generator-test scaffold-help scaffold-check scaffold-test scaffold-build
 
 help:
 	@printf "Available targets:\n"
@@ -53,6 +53,8 @@ help:
 	@printf "  make dev-sandbox-up  Start local E2E services\n"
 	@printf "  make dev-sandbox-down Stop local E2E services\n"
 	@printf "\nGenerator\n"
+	@printf "  make generator-lint  Lint create-aztec-privacy-template (Biome)\n"
+	@printf "  make generator-check Run generator fmt:check + lint + typecheck + test\n"
 	@printf "  make generator-typecheck Type-check create-aztec-privacy-template\n"
 	@printf "  make generator-build Build create-aztec-privacy-template\n"
 	@printf "  make generator-test  Run generator unit/smoke tests\n"
@@ -277,6 +279,17 @@ generator-install:
 		echo "Installing generator dependencies..."; \
 		(cd $(GENERATOR_DIR) && $(BUN) install); \
 	fi
+
+generator-lint: generator-install
+	@echo "Linting generator package..."
+	@(cd $(GENERATOR_DIR) && $(BUN) run lint)
+
+generator-check: generator-install
+	@echo "Running generator checks..."
+	@(cd $(GENERATOR_DIR) && $(BUN) run fmt:check)
+	@(cd $(GENERATOR_DIR) && $(BUN) run lint)
+	@(cd $(GENERATOR_DIR) && $(BUN) run typecheck)
+	@(cd $(GENERATOR_DIR) && $(BUN) run test)
 
 generator-typecheck: generator-install
 	@echo "Type-checking generator package..."
