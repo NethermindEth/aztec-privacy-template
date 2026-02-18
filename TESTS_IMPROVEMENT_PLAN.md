@@ -102,7 +102,7 @@ Improve `tests/` so they are:
 
 1. Core invariants are protected by fast unit tests independent of E2E.
 
-## Phase 5: Aztec adapter execution coverage
+## Phase 5: Aztec adapter execution coverage **COMPLETED**
 
 ### Changes
 

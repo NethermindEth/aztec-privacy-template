@@ -97,7 +97,7 @@ test-e2e:
 		echo "tsx is missing; installing workspace dependencies first..."; \
 		$(BUN) install; \
 	fi
-	@node --import tsx --test --test-concurrency=1 --test-reporter=spec tests/aave.ts tests/lido.ts tests/uniswap.ts
+	@node --import tsx --test --test-concurrency=1 --test-reporter=spec tests/aave.ts tests/lido.ts tests/uniswap.ts tests/aztec-adapters.ts
 
 build:
 	@echo "Building artifacts for all protocols..."
