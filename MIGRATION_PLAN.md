@@ -135,7 +135,7 @@ Exit criteria:
 1. Existing commands and generated output remain unchanged.
 2. New module boundaries are in place.
 
-## Phase 2: Template Registry and Typed Installer
+## Phase 2: Template Registry and Typed Installer **COMPLETE**
 
 Tasks:
 
@@ -148,7 +148,7 @@ Exit criteria:
 1. Same output can be generated via the new template installer.
 2. Template choice logic is type-safe and test-covered.
 
-## Phase 3: Prompt and Preference Flow
+## Phase 3: Prompt and Preference Flow **COMPLETE**
 
 Tasks:
 
