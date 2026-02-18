@@ -39,6 +39,7 @@ help:
 	@printf "  make test-e2e-adapters Run adapter cross-chain E2E suite (slow)\n"
 	@printf "  make test-e2e-full   Run full E2E suite (fast + adapters)\n"
 	@printf "  make build           Build protocol artifacts\n"
+	@printf "  make build-aztec     Compile Aztec protocol contracts\n"
 	@printf "  make clean           Clean build artifacts\n"
 	@printf "  make check           Run fmt-check + lint + typecheck + test-core\n"
 	@printf "  make protocol-aave   Build Aave protocol artifacts\n"
