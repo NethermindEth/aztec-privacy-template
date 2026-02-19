@@ -10,7 +10,7 @@ SOLIDITY_FMT_FILES := $(shell find contracts/l1 -type f -name '*.sol' -not -path
 
 AZTEC_CONTRACT_DIRS := contracts/aztec
 
-.PHONY: help install verify-toolchain fmt fmt-check lint test _test-core _test-flow build build-aztec check clean
+.PHONY: help install verify-toolchain fmt fmt-check lint test _test-core _test-flow build build-aztec deploy test-deployment verify-deployment integration-deployment check clean
 
 help:
 	@printf "Aztec Privacy Starter Make Targets\n\n"
@@ -28,6 +28,11 @@ help:
 	@printf "Build\n"
 	@printf "  make build            Build Solidity + Aztec artifacts\n"
 	@printf "  make build-aztec      Compile Aztec Noir contract\n\n"
+	@printf "Deploy\n"
+	@printf "  make deploy           Deploy scaffold contracts (local or sepolia/testnet)\n"
+	@printf "  make test-deployment  Run live post-deploy integration checks\n"
+	@printf "  make verify-deployment Run deployment invariant checks only\n"
+	@printf "  make integration-deployment Run state-changing integration flow only\n\n"
 	@printf "Cleanup\n"
 	@printf "  make clean            Remove build artifacts\n"
 
@@ -147,6 +152,32 @@ build:
 	@mkdir -p target
 	@echo "Build complete."
 
+deploy:
+	@bash scripts/deploy.sh
+
+test-deployment:
+	@if [ -n "$(DEPLOYMENT_FILE)" ]; then \
+		bash scripts/verify-deployment.sh "$(DEPLOYMENT_FILE)"; \
+		bash scripts/integration-test-deployment.sh "$(DEPLOYMENT_FILE)"; \
+	else \
+		bash scripts/verify-deployment.sh; \
+		bash scripts/integration-test-deployment.sh; \
+	fi
+
+verify-deployment:
+	@if [ -n "$(DEPLOYMENT_FILE)" ]; then \
+		bash scripts/verify-deployment.sh "$(DEPLOYMENT_FILE)"; \
+	else \
+		bash scripts/verify-deployment.sh; \
+	fi
+
+integration-deployment:
+	@if [ -n "$(DEPLOYMENT_FILE)" ]; then \
+		bash scripts/integration-test-deployment.sh "$(DEPLOYMENT_FILE)"; \
+	else \
+		bash scripts/integration-test-deployment.sh; \
+	fi
+
 check:
 	@$(MAKE) fmt-check
 	@$(MAKE) lint
@@ -157,4 +188,5 @@ clean:
 	@rm -rf target
 	@rm -rf cache out
 	@rm -rf contracts/l1/cache contracts/l1/out
+	@rm -rf contracts/aztec/target
 	@rm -rf coverage .turbo .nyc_output

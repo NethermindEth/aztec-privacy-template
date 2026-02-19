@@ -4,9 +4,9 @@ This runbook defines required deployment/config values for the generated templat
 
 Important:
 
-1. This template currently does not ship an end-to-end deployment script.
-2. A deployment script is expected in future iterations.
-3. Until then, use this runbook as the source of truth for manual/developer-run automation.
+1. The scaffold includes `scripts/deploy.sh` for end-to-end deployment automation.
+2. The script supports both local (`aztec start --local-network`) and Sepolia + Aztec testnet style setups.
+3. This runbook remains the source of truth for constructor semantics and environment-level value ownership.
 
 ## Contracts and Constructor Inputs
 
@@ -19,8 +19,10 @@ Source: your protocol flow identifier (bytes32) agreed by your integration.
 Recommendation: derive from stable string (for example `keccak256("MY_PROTOCOL_V1")`) and pin in config.
 
 2. `l2Contract_`:
-Source: deployed L2 Aztec adapter address (`GenericPrivacyAdapter` or your renamed contract).
+Source: deployed L2 Aztec adapter contract address as `bytes32`
+(`GenericPrivacyAdapter` or your renamed contract).
 Must match the L2 contract that emits/consumes messages for this flow.
+You may pass `0x00...00` at deploy time and finalize once via `setL2Contract(bytes32)`.
 
 3. `relayer_`:
 Source: relayer/service account address allowed to call `executeAction`.
@@ -52,7 +54,85 @@ Use deterministic deployment/orchestration so each side's address can be known i
 2. Coordinated deployment strategy:
 Use deployment tooling that can compute planned addresses, then deploy both sides with matching inputs.
 
-Do not use placeholder addresses in production flows.
+The scaffold deploy script resolves the dependency using one-time deferred L2 binding on `GenericPortal`:
+
+1. deploy `GenericActionExecutor`
+2. deploy `GenericPortal` with `l2Contract_ = 0x00...00` (`bytes32`)
+3. configure executor portal binding
+4. deploy `GenericPrivacyAdapter` with the real deployed portal address
+5. finalize L1 portal L2 binding via `setL2Contract(bytes32)`
+
+## Script Usage
+
+```bash
+bash scripts/deploy.sh
+```
+
+Verify deployed contracts against live RPCs:
+
+```bash
+make test-deployment
+# or: make test-deployment DEPLOYMENT_FILE=.deployments.sepolia.json
+```
+
+What `make test-deployment` runs:
+
+1. `scripts/verify-deployment.sh` (manifest + L1/L2 invariant checks)
+2. `scripts/integration-test-deployment.sh` (state-changing L1 request/execute success + failure flow)
+
+### What `.env.deploy.example` is for
+
+`.env.deploy.example` is a starter environment file for `scripts/deploy.sh`.
+
+1. It documents the deploy script variables in one place.
+2. It provides sensible local defaults for `aztec start --local-network`.
+3. It includes commented Sepolia/testnet examples you can enable per environment.
+
+Important behavior:
+
+1. `scripts/deploy.sh` does **not** auto-load `.env.deploy`.
+2. You must export variables yourself before running the script.
+
+Recommended flow:
+
+```bash
+cp .env.deploy.example .env.deploy
+# edit .env.deploy
+set -a && source .env.deploy && set +a
+bash scripts/deploy.sh
+```
+
+Local defaults:
+
+1. `L1_RPC_URL=http://127.0.0.1:8545`
+2. `AZTEC_NODE_URL=http://127.0.0.1:8080`
+3. anvil deterministic test key if `DEPLOYER_PRIVATE_KEY` is unset
+4. Aztec account alias `test0` after `import-test-accounts`
+
+Sepolia/testnet expected inputs:
+
+1. `L1_RPC_URL` pointing at Sepolia RPC
+2. `AZTEC_NODE_URL` pointing at your Aztec testnet endpoint
+3. `DEPLOYER_PRIVATE_KEY` funded with Sepolia ETH
+
+Optional script env vars:
+
+1. `PROTOCOL_ID` (`bytes32`, default `keccak256("GENERIC_ACTION_V1")`)
+2. `RELAYER_ADDRESS` (defaults to L1 deployer address)
+3. `AZTEC_ACCOUNT_ALIAS` (defaults to `test0` on local, `deployer` on sepolia)
+4. `AZTEC_CONTRACT_ALIAS` (defaults to `generic-privacy-adapter`)
+5. `SPONSORED_FPC_ADDRESS` (testnet account bootstrap helper)
+6. `WALLET_DATA_DIR` (defaults to `.aztec-wallet` under project root)
+7. `SKIP_BUILD=1` to skip artifact rebuild
+
+Optional integration-test env vars:
+
+1. `RELAYER_PRIVATE_KEY` (required unless local default key matches relayer)
+2. `OPERATOR_PRIVATE_KEY` (required unless same as deployer/relayer key)
+3. `DEPLOYER_PRIVATE_KEY` (fallback key source for integration tests)
+4. `INTEGRATION_AMOUNT_WEI` (request amount used by integration flow)
+5. `FAILURE_TIMEOUT_BLOCKS` (escape timeout blocks used by failure-path integration test)
+6. `FAILURE_TARGET` (non-allowlisted address used to assert failure-path behavior)
 
 ## Environment Configuration Manifest
 
@@ -60,7 +140,7 @@ Create one manifest (for example `.env.deploy` or deployment JSON) per environme
 
 1. `PROTOCOL_ID` (bytes32)
 2. `L1_GENERIC_PORTAL` (address)
-3. `L2_GENERIC_ADAPTER` (address)
+3. `L2_GENERIC_ADAPTER` (bytes32 Aztec address)
 4. `RELAYER_ADDRESS` (address)
 5. `EXECUTOR_ADDRESS` (address)
 6. `AZTEC_ADMIN_ADDRESS` (Aztec address)

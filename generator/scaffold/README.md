@@ -42,13 +42,16 @@ Important integration boundary:
 ```text
 .
 |-- contracts/
-|   |-- l1/                            # BasePortal, EscapeHatch, GenericPortal + tests
+|   |-- l1/                            # BasePortal, EscapeHatch, GenericPortal, GenericActionExecutor + tests
 |   `-- aztec/                         # Generic Noir adapter skeleton
 |-- docs/
-|   |-- DEPLOYMENT.md                  # deployment/configuration runbook (manual until script is added)
+|   |-- DEPLOYMENT.md                  # deployment/configuration runbook + script usage
 |   `-- RELAYER_SPEC.md                # minimal relayer operational spec
 |-- scripts/
-|   `-- compile-aztec-contract.sh
+|   |-- compile-aztec-contract.sh
+|   |-- deploy.sh
+|   |-- integration-test-deployment.sh
+|   `-- verify-deployment.sh
 |-- Makefile
 `-- package.json
 ```
@@ -85,10 +88,16 @@ Compile Solidity and Aztec contract artifacts.
 2. `make test`  
 Run all starter Solidity tests (`BasePortal`, `EscapeHatch`, `GenericPortal` flow).
 
+3. `bash scripts/deploy.sh`  
+Deploy scaffold contracts to local Aztec/Anvil or Aztec testnet + Sepolia.
+
+4. `make test-deployment`  
+Run live post-deploy checks (invariants + state-changing integration flow).
+
 ## Adaptation workflow
 
 1. Start from `contracts/l1/GenericPortal.sol`.
-2. Replace `IGenericActionExecutor` wiring with your protocol integration call(s).
+2. Adapt `contracts/l1/GenericActionExecutor.sol` target allowlist + forwarding payload to your protocol integration.
 3. Extend `contracts/aztec/src/main.nr` intent fields to match your private flow.
 4. Define a single completion payload schema and keep it identical in `GenericPortal` success emission, relayer transport,
    and Noir `finalize_action` hashing.
@@ -119,7 +128,7 @@ Use `docs/DEPLOYMENT.md` as the source of truth for:
 3. address dependency planning between L1 and L2 contracts
 4. deployment validation checks
 
-This template will include a deployment script in a future iteration. Until then, use the runbook for manual or custom automation.
+Use `bash scripts/deploy.sh` for scaffold deployment automation, and keep `docs/DEPLOYMENT.md` as the source of truth for environment values.
 
 ## Relayer Operational Spec
 

@@ -26,3 +26,7 @@ cache/
 
 # Tooling artifacts
 .env
+
+generator/scaffold/.deployments.local.json
+
+generator/scaffold/.aztec-wallet/
