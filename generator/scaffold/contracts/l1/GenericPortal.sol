@@ -73,11 +73,12 @@ contract GenericPortal is BasePortal, EscapeHatch {
 
     /// @notice Creates a new generic portal.
     /// @param protocolId_ Protocol identifier used in deterministic message hashing.
-    /// @param l2Contract_ L2 adapter contract address for this flow.
+    /// @param l2Contract_ L2 adapter contract identifier (`bytes32` Aztec contract address) for this flow.
+    /// `bytes32(0)` enables deferred one-time binding via `setL2Contract`.
     /// @param relayer_ Relayer/service address authorized to execute inbound messages.
     /// @param executor_ Protocol execution hook for concrete integration.
     /// @dev See scaffold docs/DEPLOYMENT.md for value sources and address planning guidance.
-    constructor(bytes32 protocolId_, address l2Contract_, address relayer_, address executor_)
+    constructor(bytes32 protocolId_, bytes32 l2Contract_, address relayer_, address executor_)
         BasePortal(protocolId_, l2Contract_, relayer_)
     {
         if (executor_ == address(0)) {
@@ -140,6 +141,7 @@ contract GenericPortal is BasePortal, EscapeHatch {
         }
 
         bytes32 messageHash = _buildMessageHash(content, sender, nonce);
+        // forge-lint: disable-next-line(asm-keccak256)
         bytes32 actionHash = keccak256(actionData);
 
         _assertFlowRequest(messageHash, sender, amount, actionHash);

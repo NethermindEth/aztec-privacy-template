@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.33;
 
-import "../GenericPortal.sol";
+import {EscapeHatch} from "../EscapeHatch.sol";
+import {GenericPortal, IGenericActionExecutor} from "../GenericPortal.sol";
 
 interface IHevm {
     function roll(uint256) external;
@@ -58,13 +59,18 @@ contract UnauthorizedGenericRelayerCaller {
 
 contract GenericPortalTest {
     IHevm private constant HEVM = IHevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
+    bytes32 private constant PROTOCOL_ID = keccak256("GENERIC_PORTAL");
+    bytes32 private constant L2_CONTRACT_1 = keccak256("L2_CONTRACT_1");
+    bytes32 private constant L2_CONTRACT_2 = keccak256("L2_CONTRACT_2");
+    bytes32 private constant L2_CONTRACT_3 = keccak256("L2_CONTRACT_3");
+    bytes32 private constant L2_CONTRACT_4 = keccak256("L2_CONTRACT_4");
+    bytes32 private constant L2_CONTRACT_5 = keccak256("L2_CONTRACT_5");
 
     receive() external payable {}
 
     function testGenericPortalRequestStoresMetadata() external {
         GenericExecutorMock executor = new GenericExecutorMock();
-        GenericPortal portal =
-            new GenericPortal(bytes32("GENERIC_PORTAL"), address(0xAAA1), address(this), address(executor));
+        GenericPortal portal = new GenericPortal(PROTOCOL_ID, L2_CONTRACT_1, address(this), address(executor));
 
         bytes32 content = keccak256("generic-request-content");
         bytes memory actionData = abi.encode(address(0xBEEF), uint256(500), uint8(7));
@@ -83,8 +89,7 @@ contract GenericPortalTest {
 
     function testGenericPortalExecuteSuccessConsumesInboundAndSendsCompletion() external {
         GenericExecutorMock executor = new GenericExecutorMock();
-        GenericPortal portal =
-            new GenericPortal(bytes32("GENERIC_PORTAL"), address(0xAAA2), address(this), address(executor));
+        GenericPortal portal = new GenericPortal(PROTOCOL_ID, L2_CONTRACT_2, address(this), address(executor));
 
         bytes32 content = keccak256("generic-success-content");
         address sender = address(this);
@@ -110,8 +115,7 @@ contract GenericPortalTest {
 
     function testGenericPortalRejectsUnauthorizedRelayerExecution() external {
         GenericExecutorMock executor = new GenericExecutorMock();
-        GenericPortal portal =
-            new GenericPortal(bytes32("GENERIC_PORTAL"), address(0xAAA3), address(this), address(executor));
+        GenericPortal portal = new GenericPortal(PROTOCOL_ID, L2_CONTRACT_3, address(this), address(executor));
         UnauthorizedGenericRelayerCaller unauthorized = new UnauthorizedGenericRelayerCaller();
 
         bytes32 content = keccak256("generic-unauthorized-content");
@@ -133,8 +137,7 @@ contract GenericPortalTest {
         GenericExecutorMock executor = new GenericExecutorMock();
         executor.setMode(GenericExecutorMock.Mode.ReturnFalse);
 
-        GenericPortal portal =
-            new GenericPortal(bytes32("GENERIC_PORTAL"), address(0xAAA4), address(this), address(executor));
+        GenericPortal portal = new GenericPortal(PROTOCOL_ID, L2_CONTRACT_4, address(this), address(executor));
 
         bytes32 content = keccak256("generic-failure-content");
         bytes memory actionData = abi.encode("escape");
@@ -161,8 +164,7 @@ contract GenericPortalTest {
 
     function testGenericPortalRejectsInvalidExecutePayload() external {
         GenericExecutorMock executor = new GenericExecutorMock();
-        GenericPortal portal =
-            new GenericPortal(bytes32("GENERIC_PORTAL"), address(0xAAA5), address(this), address(executor));
+        GenericPortal portal = new GenericPortal(PROTOCOL_ID, L2_CONTRACT_5, address(this), address(executor));
 
         bytes32 content = keccak256("generic-invalid-content");
         bytes memory expectedActionData = abi.encode("expected");

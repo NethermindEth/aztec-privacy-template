@@ -5,6 +5,7 @@ This folder contains all Solidity contracts for the starter:
 1. `BasePortal.sol`
 2. `EscapeHatch.sol`
 3. `GenericPortal.sol`
+4. `GenericActionExecutor.sol`
 
 It also includes tests under `test/`.
 
@@ -19,6 +20,8 @@ It also includes tests under `test/`.
 
 These contracts define deterministic message content and local request state. For real cross-chain delivery, integrate
 your relayer with Aztec canonical Inbox/Outbox contracts (or their current equivalent on your target network).
+
+`BasePortal` supports deferred one-time L2 binding via `setL2Contract(bytes32)` for deployment sequencing.
 
 ## Deployment parameters
 
@@ -37,9 +40,17 @@ See `../../docs/RELAYER_SPEC.md` for minimum relayer responsibilities, nonce/ide
 
 1. Keep hash construction consistent between Aztec and L1.
 2. Keep `onlyRelayer` on execution/finalization entrypoints.
-3. Wire your real protocol integration in `IGenericActionExecutor`.
+3. Adapt `GenericActionExecutor` target allowlist + payload schema to your protocol integration.
 4. Preserve escape registration behavior on execution failure.
 5. Extend tests in `test/GenericPortal.t.sol` for protocol-specific invariants.
+
+## Default executor payload
+
+`GenericActionExecutor` expects:
+
+1. `actionData = abi.encode(address target, uint256 value, bytes callData)`
+2. `target` must be allowlisted via `setTargetPermission(target, true)`
+3. `executeAction` forwards `callData` to `target` and returns call success
 
 ## Personalization examples
 

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.33;
 
-import "../BasePortal.sol";
+import {BasePortal} from "../BasePortal.sol";
 
 contract BasePortalHarness is BasePortal {
-    constructor(bytes32 protocolId, address l2Contract, address relayer) BasePortal(protocolId, l2Contract, relayer) {}
+    constructor(bytes32 protocolId, bytes32 l2Contract, address relayer) BasePortal(protocolId, l2Contract, relayer) {}
 
     function sendMessage(bytes32 content, address sender) external returns (bytes32) {
         return _sendL1ToL2Message(content, sender);
@@ -20,23 +20,22 @@ contract BasePortalHarness is BasePortal {
 }
 
 contract UnauthorizedPortalCaller {
+    function configure(BasePortalHarness portal, bytes32 l2Contract) external {
+        portal.setL2Contract(l2Contract);
+    }
+
     function consume(BasePortalHarness portal, bytes32 content, address sender, uint64 nonce) external {
         portal.consumeMessage(content, sender, nonce);
     }
 }
 
 contract BasePortalTest {
-    function testBasePortalConstructorRejectsInvalidAddresses() external {
-        bool invalidL2 = false;
-        try new BasePortalHarness(bytes32("BASE_PORTAL"), address(0), address(this)) {
-            invalidL2 = false;
-        } catch {
-            invalidL2 = true;
-        }
-        assert(invalidL2);
+    bytes32 private constant PROTOCOL_ID = keccak256("BASE_PORTAL");
+    bytes32 private constant L2_CONTRACT_ID = keccak256("L2_CONTRACT");
 
+    function testBasePortalConstructorRejectsInvalidRelayer() external {
         bool invalidRelayer = false;
-        try new BasePortalHarness(bytes32("BASE_PORTAL"), address(0xA11CE), address(0)) {
+        try new BasePortalHarness(PROTOCOL_ID, L2_CONTRACT_ID, address(0)) {
             invalidRelayer = false;
         } catch {
             invalidRelayer = true;
@@ -44,8 +43,34 @@ contract BasePortalTest {
         assert(invalidRelayer);
     }
 
+    function testBasePortalDeferredL2Configuration() external {
+        BasePortalHarness portal = new BasePortalHarness(PROTOCOL_ID, bytes32(0), address(this));
+        UnauthorizedPortalCaller unauthorized = new UnauthorizedPortalCaller();
+
+        assert(portal.L2_CONTRACT() == bytes32(0));
+
+        bool unauthorizedReverted = false;
+        try unauthorized.configure(portal, L2_CONTRACT_ID) {
+            unauthorizedReverted = false;
+        } catch {
+            unauthorizedReverted = true;
+        }
+        assert(unauthorizedReverted);
+
+        portal.setL2Contract(L2_CONTRACT_ID);
+        assert(portal.L2_CONTRACT() == L2_CONTRACT_ID);
+
+        bool cannotReconfigure = false;
+        try portal.setL2Contract(keccak256("other")) {
+            cannotReconfigure = false;
+        } catch {
+            cannotReconfigure = true;
+        }
+        assert(cannotReconfigure);
+    }
+
     function testBasePortalSendGeneratesDeterministicHashesAndMonotonicNonce() external {
-        BasePortalHarness portal = new BasePortalHarness(bytes32("BASE_PORTAL"), address(0xA11CE), address(this));
+        BasePortalHarness portal = new BasePortalHarness(PROTOCOL_ID, L2_CONTRACT_ID, address(this));
 
         bytes32 content = keccak256("content-key");
         address sender = address(0xB0B);
@@ -66,7 +91,7 @@ contract BasePortalTest {
     }
 
     function testBasePortalRejectsEmptyRecipientMessageSend() external {
-        BasePortalHarness portal = new BasePortalHarness(bytes32("BASE_PORTAL"), address(0xA11CE), address(this));
+        BasePortalHarness portal = new BasePortalHarness(PROTOCOL_ID, L2_CONTRACT_ID, address(this));
 
         bool reverted = false;
 
@@ -80,7 +105,7 @@ contract BasePortalTest {
     }
 
     function testBasePortalConsumptionFlow() external {
-        BasePortalHarness portal = new BasePortalHarness(bytes32("BASE_PORTAL"), address(0xA11CE), address(this));
+        BasePortalHarness portal = new BasePortalHarness(PROTOCOL_ID, L2_CONTRACT_ID, address(this));
         UnauthorizedPortalCaller unauthorized = new UnauthorizedPortalCaller();
 
         bytes32 content = keccak256("consume-key");

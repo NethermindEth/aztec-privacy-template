@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.33;
 
-import "../EscapeHatch.sol";
+import {EscapeHatch} from "../EscapeHatch.sol";
 
 interface IHevm {
     function roll(uint256) external;
