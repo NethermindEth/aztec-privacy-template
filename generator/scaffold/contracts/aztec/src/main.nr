@@ -22,6 +22,8 @@ pub(crate) contract GenericPrivacyAdapter {
     #[external("public")]
     #[initializer]
     fn constructor(admin: AztecAddress, portal_address: EthAddress) {
+        // `admin` and `portal_address` values should be sourced from deployment manifest/runbook.
+        // See scaffold docs/DEPLOYMENT.md for environment-level configuration guidance.
         assert(!admin.is_zero(), "Admin address cannot be zero");
         assert(!portal_address.is_zero(), "Portal address cannot be zero");
 
@@ -33,6 +35,10 @@ pub(crate) contract GenericPrivacyAdapter {
     // - build deterministic intent id from caller + protocol fields
     // - emit L2 -> L1 message for portal request matching
     // - mark pending intent so finalize can clear it later
+    // Personalization examples:
+    // - lending flow: rename `asset` -> `market_id`, `action_type` -> `position_action`
+    // - swap flow: treat `asset` as `token_in`, add `token_out` + `min_out` fields
+    // Keep equivalent semantics in L1 `actionData` so hash compatibility is preserved.
     #[external("private")]
     fn request_action(
         asset: Field,
@@ -66,6 +72,10 @@ pub(crate) contract GenericPrivacyAdapter {
     // Generic finalize skeleton:
     // - consume portal completion message
     // - clear pending intent state
+    // Payload compatibility contract:
+    // - this `content` hash MUST match the L1 success-path completion payload emitted by GenericPortal
+    // - if you change completion fields here, update L1 completion construction + relayer transport logic
+    // Example: if finalize requires `result_fee`, include it in both L1 completion payload and this hash.
     #[external("private")]
     fn finalize_action(
         intent_id: Field,

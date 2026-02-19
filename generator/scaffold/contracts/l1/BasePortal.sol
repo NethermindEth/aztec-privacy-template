@@ -40,8 +40,9 @@ abstract contract BasePortal {
 
     /// @notice Initializes the portal with immutable protocol metadata.
     /// @param protocolId_ protocol identifier used for hashing messages.
-    /// @param l2Contract_ bound L2 contract address.
-    /// @param relayer_ authorized relayer address.
+    /// @param l2Contract_ bound L2 contract address (Aztec adapter for this flow).
+    /// @param relayer_ authorized relayer/service address.
+    /// @dev Value source guidance is documented in scaffold docs/DEPLOYMENT.md.
     constructor(bytes32 protocolId_, address l2Contract_, address relayer_) {
         if (l2Contract_ == address(0)) {
             revert InvalidL2Contract();

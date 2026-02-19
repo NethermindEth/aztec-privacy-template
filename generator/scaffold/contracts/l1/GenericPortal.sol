@@ -12,6 +12,9 @@ interface IGenericActionExecutor {
     /// @param actor Original request actor.
     /// @param amount Amount carried by request metadata.
     /// @param actionData Protocol-specific execution payload.
+    /// Personalization examples:
+    /// - lend/repay: abi.encode(uint8(actionKind), address(asset), uint256(amount), bytes(protocolArgs))
+    /// - swap: abi.encode(address(tokenIn), address(tokenOut), uint256(amountIn), uint256(minOut), bytes(route))
     /// @return success Whether execution succeeded.
     function executeAction(address actor, uint256 amount, bytes calldata actionData) external returns (bool success);
 }
@@ -21,6 +24,7 @@ interface IGenericActionExecutor {
 /// @notice Protocol-agnostic L1 portal skeleton for Aztec private flows.
 /// @dev Customize executor integration + payload shape when adapting.
 /// Canonical Aztec Inbox/Outbox delivery/proof integration is expected in relayer/off-chain orchestration.
+/// Completion payload compatibility with Noir `finalize_action` must be maintained when you change fields.
 contract GenericPortal is BasePortal, EscapeHatch {
     /// @notice Flow identifier used for the generic request/execute path.
     bytes32 public constant ACTION_FLOW = keccak256("GENERIC_ACTION");
@@ -69,9 +73,10 @@ contract GenericPortal is BasePortal, EscapeHatch {
 
     /// @notice Creates a new generic portal.
     /// @param protocolId_ Protocol identifier used in deterministic message hashing.
-    /// @param l2Contract_ L2 contract bound to this portal.
-    /// @param relayer_ Address authorized to execute inbound messages.
+    /// @param l2Contract_ L2 adapter contract address for this flow.
+    /// @param relayer_ Relayer/service address authorized to execute inbound messages.
     /// @param executor_ Protocol execution hook for concrete integration.
+    /// @dev See scaffold docs/DEPLOYMENT.md for value sources and address planning guidance.
     constructor(bytes32 protocolId_, address l2Contract_, address relayer_, address executor_)
         BasePortal(protocolId_, l2Contract_, relayer_)
     {
@@ -86,6 +91,7 @@ contract GenericPortal is BasePortal, EscapeHatch {
     /// @param content Encoded action payload hash from Aztec.
     /// @param amount Amount associated with this request.
     /// @param actionHash Hash of L1 executor payload expected at execution.
+    /// @dev Compute `actionHash` from your concrete `actionData` schema at request creation time.
     /// @return messageHash Deterministic outbound message hash.
     function requestAction(bytes32 content, uint256 amount, bytes32 actionHash) external returns (bytes32 messageHash) {
         if (amount == 0) {
@@ -101,10 +107,16 @@ contract GenericPortal is BasePortal, EscapeHatch {
 
     /// @notice Executes a generic action after relayer proves matching inbound message.
     /// @dev Execution payload is validated via `keccak256(actionData)` against request metadata.
+    /// This starter re-emits `content` as completion message placeholder.
+    /// In real integrations, emit completion content that matches Noir `finalize_action` hash construction.
+    /// Relayer runtime expectations are documented in scaffold docs/RELAYER_SPEC.md.
     /// @param content Encoded request payload hash from Aztec side.
     /// @param sender Original request actor.
     /// @param amount Amount expected from request metadata.
     /// @param actionData Protocol execution payload for executor integration.
+    /// Example payloads:
+    /// - lend/repay: abi.encode(actionKind, asset, amount, protocolArgs)
+    /// - swap: abi.encode(tokenIn, tokenOut, amountIn, minOut, route)
     /// @param nonce Nonce from outbound request.
     /// @param timeoutBlocks Escape timeout override, zero uses default.
     function executeAction(

@@ -44,6 +44,9 @@ Important integration boundary:
 |-- contracts/
 |   |-- l1/                            # BasePortal, EscapeHatch, GenericPortal + tests
 |   `-- aztec/                         # Generic Noir adapter skeleton
+|-- docs/
+|   |-- DEPLOYMENT.md                  # deployment/configuration runbook (manual until script is added)
+|   `-- RELAYER_SPEC.md                # minimal relayer operational spec
 |-- scripts/
 |   `-- compile-aztec-contract.sh
 |-- Makefile
@@ -54,10 +57,25 @@ Important integration boundary:
 
 ```bash
 cd __PROJECT_NAME__
+make verify-toolchain
 __INSTALL_COMMAND__
 make check
-make test
 ```
+
+`make check` runs formatting checks, linting, and starter tests.
+Use `make help` for the full command list.
+
+## Prerequisites
+
+The generated project expects these tools on PATH:
+
+1. `bun`
+2. `node`
+3. `aztec`
+4. `forge`
+5. `cast`
+
+Run `make verify-toolchain` to validate your local setup.
 
 ## Core commands
 
@@ -72,14 +90,51 @@ Run all starter Solidity tests (`BasePortal`, `EscapeHatch`, `GenericPortal` flo
 1. Start from `contracts/l1/GenericPortal.sol`.
 2. Replace `IGenericActionExecutor` wiring with your protocol integration call(s).
 3. Extend `contracts/aztec/src/main.nr` intent fields to match your private flow.
-4. Update `contracts/l1/test/GenericPortal.t.sol` with protocol-specific assertions.
-5. Implement relayer + canonical Inbox/Outbox integration for your network.
+4. Define a single completion payload schema and keep it identical in `GenericPortal` success emission, relayer transport,
+   and Noir `finalize_action` hashing.
+5. Update `contracts/l1/test/GenericPortal.t.sol` with protocol-specific assertions.
+6. Add relayer/integration tests that prove completion payload compatibility between L1 and Noir.
+7. Implement relayer + canonical Inbox/Outbox integration for your network.
+
+## Start Here (Recommended Order)
+
+1. `contracts/l1/GenericPortal.sol`
+Define protocol-side execution flow and payload expectations.
+
+2. `contracts/aztec/src/main.nr`
+Define private intent fields and finalize payload compatibility.
+
+3. `contracts/l1/test/GenericPortal.t.sol`
+Add protocol-specific request/execute/failure invariants.
+
+4. `docs/DEPLOYMENT.md` and `docs/RELAYER_SPEC.md`
+Set constructor/deployment config and relayer operating behavior.
+
+## Deployment Configuration
+
+Use `docs/DEPLOYMENT.md` as the source of truth for:
+
+1. required constructor parameters
+2. value sources per environment
+3. address dependency planning between L1 and L2 contracts
+4. deployment validation checks
+
+This template will include a deployment script in a future iteration. Until then, use the runbook for manual or custom automation.
+
+## Relayer Operational Spec
+
+Use `docs/RELAYER_SPEC.md` for minimum relayer behavior requirements:
+
+1. canonical message handling responsibilities
+2. idempotency + nonce rules
+3. retry/failure/reorg handling
+4. required observability and operational controls
 
 ## Safety boundaries
 
 This starter is not production-ready as-is. It does not include:
 
-1. relayer service implementation
+1. relayer service implementation (only a minimum operational spec is provided)
 2. production deployment pipelines
 3. frontend application scaffolding
 4. production bridge claim operations
