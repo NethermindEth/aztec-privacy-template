@@ -27,6 +27,16 @@ Generic Executor hook
 Aztec Generic Adapter (private finalize_*)
 ```
 
+Important integration boundary:
+
+1. This template models request/completion message content and lifecycle.
+2. Real cross-chain transport must be wired through Aztec canonical messaging contracts
+   (Inbox/Outbox for your target network/version).
+3. `BasePortal` tracks deterministic message hashes and emits events for traceability, but it does not by itself
+   submit/consume canonical bridge proofs.
+4. Your relayer/service must bridge Aztec messages to `requestAction`/`executeAction` and back to
+   `finalize_action` using the canonical contracts.
+
 ## Repository layout
 
 ```text
@@ -63,6 +73,7 @@ Run all starter Solidity tests (`BasePortal`, `EscapeHatch`, `GenericPortal` flo
 2. Replace `IGenericActionExecutor` wiring with your protocol integration call(s).
 3. Extend `contracts/aztec/src/main.nr` intent fields to match your private flow.
 4. Update `contracts/l1/test/GenericPortal.t.sol` with protocol-specific assertions.
+5. Implement relayer + canonical Inbox/Outbox integration for your network.
 
 ## Safety boundaries
 

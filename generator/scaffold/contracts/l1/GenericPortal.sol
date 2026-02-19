@@ -19,7 +19,8 @@ interface IGenericActionExecutor {
 /// @title GenericPortal
 /// @author aztec-privacy-template
 /// @notice Protocol-agnostic L1 portal skeleton for Aztec private flows.
-/// @dev Customize only executor integration + payload shape when adapting.
+/// @dev Customize executor integration + payload shape when adapting.
+/// Canonical Aztec Inbox/Outbox delivery/proof integration is expected in relayer/off-chain orchestration.
 contract GenericPortal is BasePortal, EscapeHatch {
     /// @notice Flow identifier used for the generic request/execute path.
     bytes32 public constant ACTION_FLOW = keccak256("GENERIC_ACTION");

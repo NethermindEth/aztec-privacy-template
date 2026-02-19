@@ -15,6 +15,11 @@ It also includes tests under `test/`.
 3. timeout-gated recovery path (`EscapeHatch`)
 4. protocol-agnostic request/execute bridge (`GenericPortal`)
 
+## Messaging integration note
+
+These contracts define deterministic message content and local request state. For real cross-chain delivery, integrate
+your relayer with Aztec canonical Inbox/Outbox contracts (or their current equivalent on your target network).
+
 ## Adaptation checklist
 
 1. Keep hash construction consistent between Aztec and L1.

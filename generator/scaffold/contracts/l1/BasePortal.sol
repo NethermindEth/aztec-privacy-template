@@ -3,7 +3,9 @@ pragma solidity ^0.8.33;
 
 /// @title BasePortal
 /// @author aztec-privacy-template
-/// @notice Base contract for protocol portals.
+/// @notice Base contract for protocol portal message bookkeeping.
+/// @dev This contract defines deterministic message hashes + local tracking only.
+/// Canonical Aztec Inbox/Outbox proof transport is handled by external relayer/integration code.
 abstract contract BasePortal {
     /// @notice Emitted when an L1 message is sent to L2.
     /// @param messageHash Hash of the sent payload.
