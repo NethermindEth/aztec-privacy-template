@@ -11,10 +11,7 @@ export interface PostInitContext {
 
 type PostInitHook = (context: PostInitContext) => Promise<void>;
 
-const POST_INIT_HOOKS: PostInitHook[] = [
-  verifyRequiredLayoutHook,
-  ensureScriptExecutablesHook,
-];
+const POST_INIT_HOOKS: PostInitHook[] = [verifyRequiredLayoutHook, ensureScriptExecutablesHook];
 
 export async function runPostInitHooks(context: PostInitContext): Promise<void> {
   for (const hook of POST_INIT_HOOKS) {
@@ -57,7 +54,11 @@ async function ensureScriptExecutablesHook(context: PostInitContext): Promise<vo
     'scripts',
     'integration-test-deployment.sh',
   );
-  const verifyDeploymentScript = join(context.absoluteTargetPath, 'scripts', 'verify-deployment.sh');
+  const verifyDeploymentScript = join(
+    context.absoluteTargetPath,
+    'scripts',
+    'verify-deployment.sh',
+  );
   await chmod(compileScript, 0o755);
   await chmod(deployScript, 0o755);
   await chmod(integrationDeploymentScript, 0o755);
