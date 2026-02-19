@@ -1,5 +1,5 @@
 import { cp, mkdir } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, relative, sep } from 'node:path';
 
 import {
   EXAMPLE_OVERLAY_ORDER,
@@ -42,6 +42,7 @@ export async function installTemplatePlan(
       errorOnExist: true,
       force: false,
       preserveTimestamps: true,
+      filter: createTemplateCopyFilter(plan.base.sourceDir),
     });
   }
 
@@ -51,8 +52,29 @@ export async function installTemplatePlan(
       errorOnExist: false,
       force: true,
       preserveTimestamps: true,
+      filter: createTemplateCopyFilter(overlay.sourceDir),
     });
   }
+}
+
+const GENERATED_ARTIFACT_PREFIXES = [
+  'contracts/l1/cache',
+  'contracts/l1/out',
+  'contracts/aztec/target',
+] as const;
+
+function createTemplateCopyFilter(sourceRoot: string) {
+  return (sourcePath: string): boolean => {
+    const relPath = relative(sourceRoot, sourcePath);
+    if (relPath === '') {
+      return true;
+    }
+
+    const normalizedRelPath = relPath.split(sep).join('/');
+    return !GENERATED_ARTIFACT_PREFIXES.some(
+      (prefix) => normalizedRelPath === prefix || normalizedRelPath.startsWith(`${prefix}/`),
+    );
+  };
 }
 
 function getBaseTemplate(generatorRoot: string): BaseTemplateDefinition {
