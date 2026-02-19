@@ -10,6 +10,7 @@ export const EXAMPLE_OVERLAY_ORDER = ['aave', 'lido', 'uniswap'] as const;
 export const SUPPORTED_EXAMPLE_SELECTIONS = ['none', ...EXAMPLE_OVERLAY_ORDER, 'all'] as const;
 
 export const TEMPLATE_COPY_ENTRIES = [
+  '.env.deploy.example',
   '.solhint.json',
   'gitignore',
   'Makefile',

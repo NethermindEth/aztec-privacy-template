@@ -1,4 +1,5 @@
 [
+  ".env.deploy.example",
   ".gitignore",
   ".solhint.json",
   "contracts/",
@@ -11,6 +12,7 @@
   "contracts/l1/BasePortal.sol",
   "contracts/l1/EscapeHatch.sol",
   "contracts/l1/foundry.toml",
+  "contracts/l1/GenericActionExecutor.sol",
   "contracts/l1/GenericPortal.sol",
   "contracts/l1/README.md",
   "contracts/l1/test/",
@@ -25,5 +27,8 @@
   "package.json",
   "README.md",
   "scripts/",
-  "scripts/compile-aztec-contract.sh"
+  "scripts/compile-aztec-contract.sh",
+  "scripts/deploy.sh",
+  "scripts/integration-test-deployment.sh",
+  "scripts/verify-deployment.sh"
 ]

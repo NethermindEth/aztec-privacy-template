@@ -13,7 +13,7 @@ type PostInitHook = (context: PostInitContext) => Promise<void>;
 
 const POST_INIT_HOOKS: PostInitHook[] = [
   verifyRequiredLayoutHook,
-  ensureCompileScriptExecutableHook,
+  ensureScriptExecutablesHook,
 ];
 
 export async function runPostInitHooks(context: PostInitContext): Promise<void> {
@@ -29,6 +29,9 @@ async function verifyRequiredLayoutHook(context: PostInitContext): Promise<void>
     join('contracts', 'l1'),
     join('contracts', 'aztec'),
     join('scripts', 'compile-aztec-contract.sh'),
+    join('scripts', 'deploy.sh'),
+    join('scripts', 'integration-test-deployment.sh'),
+    join('scripts', 'verify-deployment.sh'),
   ];
 
   if (context.exampleSelection === 'all') {
@@ -46,7 +49,17 @@ async function verifyRequiredLayoutHook(context: PostInitContext): Promise<void>
   }
 }
 
-async function ensureCompileScriptExecutableHook(context: PostInitContext): Promise<void> {
+async function ensureScriptExecutablesHook(context: PostInitContext): Promise<void> {
   const compileScript = join(context.absoluteTargetPath, 'scripts', 'compile-aztec-contract.sh');
+  const deployScript = join(context.absoluteTargetPath, 'scripts', 'deploy.sh');
+  const integrationDeploymentScript = join(
+    context.absoluteTargetPath,
+    'scripts',
+    'integration-test-deployment.sh',
+  );
+  const verifyDeploymentScript = join(context.absoluteTargetPath, 'scripts', 'verify-deployment.sh');
   await chmod(compileScript, 0o755);
+  await chmod(deployScript, 0o755);
+  await chmod(integrationDeploymentScript, 0o755);
+  await chmod(verifyDeploymentScript, 0o755);
 }
