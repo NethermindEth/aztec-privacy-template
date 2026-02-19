@@ -1,88 +1,114 @@
-# Aztec Privacy Template
+# Create Aztec Privacy Template
 
-Single-repo starter for building Aztec + L1 protocol integrations.
+The template generator is released and available on npm:
 
-This repo has two concerns, clearly separated:
+- https://www.npmjs.com/package/create-aztec-privacy-template
 
-1. `generator/`:
-CLI generator that scaffolds new starter projects.
-2. Runtime reference implementation:
-protocol adapters, Solidity portals, and E2E tests under `packages/` + `tests/`.
-
-## Repository Structure
-
-```text
-.
-|-- Makefile                           # single entrypoint for all dev/CI commands
-|-- packages/
-|   |-- core/solidity/                 # shared L1 primitives
-|   |-- protocols/
-|   |   |-- aave/                      # Aave protocol adapter contracts
-|   |   |-- lido/                      # Lido protocol adapter contracts
-|   |   `-- uniswap/                   # Uniswap protocol adapter contracts
-|-- generator/                         # project generator package
-|-- tests/
-|   |-- e2e/                           # protocol and adapter E2E suites
-|   |-- helpers/                       # E2E runtime/test harness utilities
-|   `-- mocks/                         # Solidity mocks used by E2E tests
-`-- scripts/                           # shared compile helpers
-```
+Use it to scaffold a protocol-agnostic Aztec + L1 starter with Solidity portals, a Noir adapter skeleton, and baseline tests.
 
 ## Quick Start
 
 ```bash
-make install
+npx create-aztec-privacy-template@latest my-aztec-app
+cd my-aztec-app
 make check
-make test
 ```
 
-## Main Commands
+Non-interactive scaffolding:
+
+```bash
+npx create-aztec-privacy-template@latest my-aztec-app --yes
+```
+
+## CLI Options
+
+```bash
+npx create-aztec-privacy-template@latest <project-name-or-path> \
+  [--pm <bun|npm|pnpm|yarn>] \
+  [--example <none|aave|lido|uniswap|all>] \
+  [--example-source <github-url|owner/repo[/path][#ref]>] \
+  [--yes] [--skip-install] [--disable-git]
+```
+
+Common examples:
+
+```bash
+npx create-aztec-privacy-template@latest demo --pm pnpm --example aave --yes
+npx create-aztec-privacy-template@latest demo --example all --yes
+npx create-aztec-privacy-template@latest demo --skip-install --disable-git --yes
+```
+
+## What Gets Generated
+
+Top-level layout:
+
+```text
+my-aztec-app/
+|-- contracts/
+|   |-- l1/
+|   |   |-- BasePortal.sol
+|   |   |-- EscapeHatch.sol
+|   |   |-- GenericPortal.sol
+|   |   `-- test/
+|   |       |-- BasePortal.t.sol
+|   |       |-- EscapeHatch.t.sol
+|   |       `-- GenericPortal.t.sol
+|   `-- aztec/
+|       |-- Nargo.toml
+|       `-- src/main.nr
+|-- scripts/compile-aztec-contract.sh
+|-- Makefile
+|-- package.json
+`-- README.md
+```
+
+Contract responsibilities:
+
+1. `contracts/l1/BasePortal.sol`
+Deterministic Aztec <-> L1 message hashing, message issuance/consumption tracking, and relayer gating.
+
+2. `contracts/l1/EscapeHatch.sol`
+Timeout-based recovery path. Failed executions can register escrowed escape requests, then depositors can claim after timeout.
+
+3. `contracts/l1/GenericPortal.sol`
+Protocol-agnostic bridge flow. Accepts requests (`requestAction`), validates/executes relayed actions (`executeAction`), emits completion messages, and registers escape on failure.
+
+4. `contracts/aztec/src/main.nr` (`GenericPrivacyAdapter`)
+Noir starter for private request/finalize flow: creates intent IDs, sends portal messages, consumes completion messages, and tracks pending intents.
+
+## Protocol Example Overlays
+
+`--example` adds protocol-specific guide files under `examples/`:
+
+- `aave`
+- `lido`
+- `uniswap`
+- `all`
+
+These overlays are adaptation guides to help you customize the generic contracts for a concrete protocol flow.
+
+## After Scaffold
+
+Inside your generated app:
 
 ```bash
 make help
-make install
 make check
 make test
 make build
-make clean
 ```
 
-Quality:
+Tooling expected by the generated project:
 
-```bash
-make fmt
-make fmt-check
-make lint
-make typecheck
-```
+- `bun`
+- `node`
+- `aztec`
+- `forge`
+- `cast`
 
-E2E:
+## Repository Note
 
-```bash
-make test-e2e
-make test-e2e-adapters
-make test-e2e-full
-```
+This repository contains:
 
-Generator:
-
-```bash
-make generator-check
-make generator-e2e-case
-make generator-published-artifact-smoke
-make generator-release-check
-```
-
-## Scaffold with the Generator
-
-```bash
-node generator/dist/cli.js my-app --yes
-```
-
-Remote example source overlay (GitHub URL or owner/repo path):
-
-```bash
-node generator/dist/cli.js my-app \
-  --example-source aztecprotocol/aztec-packages/examples/noir-contracts#master \
-  --yes
-```
+1. The published generator package in `generator/`
+2. Reference protocol/runtime code under `packages/` and `tests/`
